@@ -27,12 +27,11 @@ Next, you specify query parameters (get & delete method) or body parameters (put
 
 You then specify a result, or choose to return no result.
 
-![Intellisense gives you the option to specify a result or return no result (void)]
-(images/result.png?raw=true)
+![Intellisense gives you the option to specify a result or return no result (void)](images/result.png?raw=true)
 
 Finally, you choose the specify the path.  Any path parameters should appear between slashes and be preceded by a colon (":").
 
-![Intellisense indicates where to specify the path.](images/get-query-parameters.png?raw=true)
+![Intellisense indicates where to specify the path.](images/path.png?raw=true)
 
 Here's a sample contract
 ```ts
