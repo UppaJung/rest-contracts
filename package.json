@@ -51,7 +51,7 @@
     }
   },
   "lint-staged": {
-    "src/**/*.{ts,tsx}": ["ts:lint:fix", "git add"]
+    "src/**/*.{ts,tsx}": ["ts:lint", "git add"]
   },
   "jest": {
     "roots": ["<rootDir>/src"],
