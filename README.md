@@ -35,7 +35,7 @@ Finally, you choose the specify the path.  Any path parameters should appear bet
 
 The result is a complete contract.
 
-![A complete contract for a REST GET API.](images/complete.png?raw=true)
+![A complete contract for a REST GET API.](images/get-complete.png?raw=true)
 
 Here's a sample contract
 ```ts
