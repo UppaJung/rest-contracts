@@ -15,24 +15,24 @@ REST Contracts were designed for web services that run TypeScript on both their 
 
 First, you can use auto-complete to pick an HTTP REST method.
 
-![Intellisense shows you the Method options avaialble](https://github.com/UppaJung/rest-contracts/tree/master/images/method-choice.png)
+![Intellisense shows you the Method options avaialble](https://github.com/UppaJung/rest-contracts/tree/master/images/method-choice.png?raw=true)
 
 Then, you choose whether your method will have path paramters.
 
-![Intellisense gives you the option to specify path parameters, or no path parameters](https://github.com/UppaJung/rest-contracts/tree/master/images/get-path-parameters.png)
+![Intellisense gives you the option to specify path parameters, or no path parameters](https://github.com/UppaJung/rest-contracts/tree/master/images/get-path-parameters.png?raw=true)
 
 Next, you specify query parameters (get & delete method) or body parameters (put, post, & patch).
 
-![Intellisense gives you the option to specify query/body parameters, or none](https://github.com/UppaJung/rest-contracts/tree/master/images/get-query-parameters.png)
+![Intellisense gives you the option to specify query/body parameters, or none](https://github.com/UppaJung/rest-contracts/tree/master/images/get-query-parameters.png?raw=true)
 
 You then specify a result, or choose to return no result.
 
 ![Intellisense gives you the option to specify a result or return no result (void)]
-(https://github.com/UppaJung/rest-contracts/tree/master/images/result.png)
+(https://github.com/UppaJung/rest-contracts/tree/master/images/result.png?raw=true)
 
 Finally, you choose the specify the path.  Any path parameters should appear between slashes and be preceded by a colon (":").
 
-![Intellisense indicates where to specify the path.](https://github.com/UppaJung/rest-contracts/tree/master/images/get-query-parameters.png)
+![Intellisense indicates where to specify the path.](https://github.com/UppaJung/rest-contracts/tree/master/images/get-query-parameters.png?raw=true)
 
 Here's a sample contract
 ```ts
