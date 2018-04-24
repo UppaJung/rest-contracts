@@ -37,13 +37,14 @@ The result is a complete contract.
 
 ![A complete contract for a REST GET API.](images/get-complete.png?raw=true)
 
-Here's a sample contract
+Here's the full example with two GET requests and a PUT request for working with an interface for Excuse objects.
+
 ```ts
 import * as RestContracts from "rest-contracts";
 
 export interface Excuse {
   id: number;
-  quality: 'Solid' | 'Iffy' | 'Lousy';
+  quality: 'Solid' | 'Iffy' | 'Lame';
   description: string;
 }
 
@@ -69,3 +70,27 @@ export const Put =
   .Path("/excuses/");
 }
 ```
+
+Each RestContract is an object that contains the path and method, along with extensive type information that can be used by packages for implementing these APIs or for automatically building clients to call them.
+
+The rest-contract-browser-client API automatically creates clients for your API.
+
+
+```ts
+import * as ExcuseAPI from "./excuse-api";
+import * as RestBrowserClient from "rest-contracts-browser-client";
+
+createRequestFunction = RestBrowserClient.createRequestFunctionFactory("https://api.example.com/");
+
+const excuseClient = {
+  get: createRequestFunction(ExcuseAPI.Get),
+  query: createRequestFunction(ExcuseAPI.Query),
+  put: createRequestFunction(ExcuseAPI.Put),
+};
+
+// Fetch excuse 1
+const excuse = await excuseClient.get({id: 1});
+```
+
+The rest-contract-express module provides a full TypeScript Intellisense exprience to help you implement your API without having to remember the correct typings.
+
