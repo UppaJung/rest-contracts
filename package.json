@@ -30,7 +30,7 @@
     "ts:lint:fix": "npm run ts:lint -- --fix",
     "verify": "npm run ts:lint && npm test",
     "cz": "git-cz",
-    "precommit": "lint-staged",
+    "precommit": "npm run ts:lint",
     "prepush": "npm run ts:lint && npm run test:only-changed",
     "prerelease": "npm run build",
     "release": "standard-version",
