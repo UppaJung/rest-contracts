@@ -1,4 +1,4 @@
-import * as RestContracts from "./rest-contracts";
+import * as RestContracts from "../../rest-contracts";
 
 export interface Excuse {
   id: number;
@@ -6,25 +6,12 @@ export interface Excuse {
   description: string;
 }
 
-
-// export const Get =
-//   RestContracts.CreateAPI.Get
-//   .PathParameters<{ id: number }>()
-//   .NoQueryParameters
-//   .Returns<Excuse>()
-//   .
-
-
-
-
-
-
-// export const Get =
-//   RestContracts.CreateAPI.Get
-//   .PathParameters<{ id: number }>()
-//   .NoQueryParameters
-//   .Returns<Excuse>()
-//   .Path('/excuses/:id/');
+export const Get =
+  RestContracts.CreateAPI.Get
+  .PathParameters<{ id: number }>()
+  .NoQueryParameters
+  .Returns<Excuse>()
+  .Path('/excuses/:id/');
 
 export const Query =
   RestContracts.CreateAPI.Get
