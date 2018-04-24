@@ -96,16 +96,14 @@ type ConditionalAPI<
     PutAPI<PATH_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH> :
     API<METHOD, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH> ;
 
-export namespace API {
-  export type PATH_PARAMS<APITYPE extends API<Method, any, any, any, any, string>> = APITYPE["pathParams"];
-  export type QUERY_PARAMS<APITYPE extends API<Method, any, any, any, any, string>> = APITYPE["queryParams"];
-  export type BODY_PARAMS<APITYPE extends API<Method, any, any, any, any, string>> = APITYPE["bodyParams"];
-  export type ALL_PARAMS<APITYPE extends API<Method, any, any, any, any, string>> =
-    APITYPE["pathParams"] &
-    APITYPE["queryParams"] &
-    APITYPE["bodyParams"];
-  export type RESULT<APITYPE extends API<Method, any, any, any, any, string>> = APITYPE["result"];
-}
+export type PATH_PARAMS<APITYPE extends API<Method, any, any, any, any, string>> = APITYPE["pathParams"];
+export type QUERY_PARAMS<APITYPE extends API<Method, any, any, any, any, string>> = APITYPE["queryParams"];
+export type BODY_PARAMS<APITYPE extends API<Method, any, any, any, any, string>> = APITYPE["bodyParams"];
+export type ALL_PARAMS<APITYPE extends API<Method, any, any, any, any, string>> =
+  APITYPE["pathParams"] &
+  APITYPE["queryParams"] &
+  APITYPE["bodyParams"];
+export type RESULT<APITYPE extends API<Method, any, any, any, any, string>> = APITYPE["result"];
 
 const methodAndPathPairsAlreadySpecified = new Map<string, string>();
 
@@ -129,7 +127,7 @@ function create<
 
   const trace = {} as {stack: string};
   if (Error && "captureStackTrace" in Error) {
-    (Error as {captureStackTrace: (param: {stack?: string}) => any}).captureStackTrace(trace);
+    (Error as {captureStackTrace(param: {stack?: string}): any}).captureStackTrace(trace);
   }
   methodAndPathPairsAlreadySpecified.set(
     methodPathPair,
@@ -159,6 +157,7 @@ function createReturns<
       create<METHOD, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, BODY_PARAMETER_TYPE, void, PATH>(
         method, path)
   };
+
   return {Returns, NoResultToReturn};
 };
 
@@ -171,6 +170,7 @@ function createBodyParameter<
   }
   const NoBodyParameters =
     createReturns<PATH_PARAMETER_TYPE, undefined, undefined, METHOD>(method);
+
   return {BodyParameters, NoBodyParameters};
 };
 
@@ -183,6 +183,7 @@ function createQueryParameter<
   }
   const NoQueryParameters =
     createReturns<PATH_PARAMETER_TYPE, undefined, undefined, METHOD>(method);
+
   return {QueryParameters, NoQueryParameters};
 };
 
@@ -193,6 +194,7 @@ function createPathParameterForQueryParameterMethod<
     return createQueryParameter<PATH_PARAMETER_TYPE, METHOD>(method);
   }
   const NoPathParameters = createQueryParameter<undefined, METHOD>(method);
+
   return {PathParameters, NoPathParameters};
 };
 
@@ -204,6 +206,7 @@ function createPathParameterForBodyParameterMethod<
   }
   const NoPathParameters =
     createBodyParameter<undefined, METHOD>(method);
+
   return {PathParameters, NoPathParameters};
 };
 
