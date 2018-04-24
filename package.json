@@ -1,6 +1,6 @@
 {
   "name": "rest-contracts",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "TypeScript library for declaring REST interfaces for access by client and server.",
   "main": "umd/rest-contracts.js",
   "module": "lib/index.js",
