@@ -6,7 +6,7 @@ export enum Method {
   delete = 'delete',
 }
 
-export type PathParametersType = { [name: string]: string | number | boolean }
+export type PathParametersType = { [name: string]: string | number }
 export type QueryParametersType = {
   [name: string]:
     (string | number | boolean | undefined) |
