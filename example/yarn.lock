@@ -286,9 +286,9 @@ raw-body@2.3.2:
     iconv-lite "0.4.19"
     unpipe "1.0.0"
 
-rest-contracts-browser-client@0.5.1:
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/rest-contracts-browser-client/-/rest-contracts-browser-client-0.5.1.tgz#5a55536a96aa5817bd9eada9cd7046b33d89cf97"
+rest-contracts-browser-client@0.5.2:
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/rest-contracts-browser-client/-/rest-contracts-browser-client-0.5.2.tgz#216637e2dfd339af2bd15719ae052ba88d46dc27"
   dependencies:
     rest-contracts "0.9.9"
 
