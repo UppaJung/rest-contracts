@@ -39,6 +39,10 @@ The result is a complete contract.
 
 Here's the full example with two GET requests and a PUT request for working with an interface for Excuse objects.
 
+A server implementation wrapper via express is available as package rest-contracts-express-server.  (Another, for AWS lambda, is forthcoming).
+
+Two client builders are in alpha: rest-contracts-browser-client, which has no dependencies so that it can run compactly in the browser, and rest-contracts-axios-client, which builds on top of axios so that it can run within node or in the browser.
+
 ```ts
 import * as RestContracts from "rest-contracts";
 
