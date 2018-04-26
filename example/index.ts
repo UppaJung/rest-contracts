@@ -1,8 +1,9 @@
 import RestContracts from "rest-contracts";
 
+enum ExcuseQuality {Solid = "solid", Iffy = "iffy", Lame = "lame"};
 export interface Excuse {
   id: number;
-  quality: 'Solid' | 'Iffy' | 'Lame';
+  quality: ExcuseQuality;
   description: string;
 }
 
@@ -33,23 +34,12 @@ namespace ExcuseAPI {
   export type Put = typeof Put;
 }
 
+
+// If in separate file...
 // import * as ExcuseAPI from "../api/excuse";
-import {getClientCreationFunction} from "rest-contracts-browser-client";
-
-const createRequestFunction = getClientCreationFunction  ("https://api.example.com/", {withCredentials: true});
-
-const excuseClient = {
-  get: createRequestFunction(ExcuseAPI.Get),
-  query: createRequestFunction(ExcuseAPI.Query),
-  put: createRequestFunction(ExcuseAPI.Put),
-};
-
-const lameExcuses = excuseClient.query({quality: "Lame"});
-
-
 import * as bodyParser from "body-parser";
 import * as express from "express";
-import {RestContractsExpressServer} from "rest-contracts-express-server";
+import RestContractsExpressServer from "rest-contracts-express-server";
 
 const router = express.Router()
 const app = express();
@@ -60,18 +50,42 @@ app.listen(PORT);
 
 const ourApi = new RestContractsExpressServer(router);
 
+// Best to create a new file here, import the ourApi class,
+// and separate implementations into different files.
+const excuseMemoryTable = new Map<number, Excuse>();
+
+// req, res, & next are still available to you.
+ourApi.implement(ExcuseAPI.Put, (params, req, res, next) => {
+  excuseMemoryTable.set( params.id, params );
+  return params;
+});
+
+ourApi.implement(ExcuseAPI.Get, (params) =>
+  excuseMemoryTable.get(params.id)
+);
+
+ourApi.implement(ExcuseAPI.Query, (params) =>
+  [...excuseMemoryTable.values()].
+    filter( values => (!params.quality) || values.quality === params.quality )
+);
 
 
+// If in separate file...
+// import * as ExcuseAPI from "../api/excuse";
+import {getClientCreationFunction} from "rest-contracts-browser-client";
 
-// ourApi.implement(ExcuseAPI.Get, (params, req, res, next) => {
+const createRequestFunction = getClientCreationFunction  ("localhost", {timeoutInMs: 5000});
 
-//   const result =
-//     (params.id === 1) ? {
-//       id: 1,
-//       quality: "Lame",
-//       description: "TypeScript seems like extra work.",
-//     } :
-//     undefined;
+const excuseClient = {
+  get: createRequestFunction(ExcuseAPI.Get),
+  query: createRequestFunction(ExcuseAPI.Query),
+  put: createRequestFunction(ExcuseAPI.Put),
+};
 
-//   return result;
-// });
+excuseClient.put({
+  id: 1,
+  quality: ExcuseQuality.Lame,
+  description: "I don't use TypeScript I enjoy debugging type errors in production software.",
+});
+
+const lameExcuses = excuseClient.query({quality: ExcuseQuality.Lame});

@@ -6,17 +6,18 @@ export enum Method {
   delete = 'delete',
 }
 
-export type PathParametersType = { [name: string]: string | number }
+export type PathParametersType = { [name: string]: string } | undefined
 export type QueryParametersType = {
   [name: string]:
-    (string | number | boolean | undefined) |
-    (string | number | boolean | undefined)[]
-};
+    (string | undefined) |
+    (string | undefined)[]
+} |
+undefined;
 
 export interface API<
   METHOD extends Method = Method,
-  PATH_PARAMETER_TYPE extends PathParametersType | undefined = any,
-  QUERY_PARAMETER_TYPE extends QueryParametersType | undefined = any,
+  PATH_PARAMETER_TYPE extends PathParametersType = any,
+  QUERY_PARAMETER_TYPE extends QueryParametersType = any,
   BODY_PARAMETER_TYPE = any,
   RESULT_TYPE = any,
   PATH extends string = string
@@ -31,50 +32,50 @@ export interface API<
 }
 export interface QueryParameterAPI<
   METHOD extends Method.get | Method.delete,
-  PATH_PARAMETER_TYPE extends PathParametersType | undefined,
-  QUERY_PARAMETER_TYPE extends QueryParametersType | undefined,
+  PATH_PARAMETER_TYPE extends PathParametersType,
+  QUERY_PARAMETER_TYPE extends QueryParametersType,
   RESULT_TYPE,
   PATH extends string
 > extends API<METHOD, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, undefined, RESULT_TYPE, PATH> {}
 
 export interface BodyParameterAPI<
   METHOD extends Method.put | Method.post | Method.patch,
-  PATH_PARAMETER_TYPE extends PathParametersType | undefined,
+  PATH_PARAMETER_TYPE extends PathParametersType,
   BODY_PARAMETER_TYPE,
   RESULT_TYPE,
   PATH extends string
 > extends API<METHOD, PATH_PARAMETER_TYPE, undefined, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH> {}
 
 export interface GetAPI<
-  PATH_PARAMETER_TYPE extends PathParametersType | undefined,
-  QUERY_PARAMETER_TYPE extends QueryParametersType | undefined,
+  PATH_PARAMETER_TYPE extends PathParametersType,
+  QUERY_PARAMETER_TYPE extends QueryParametersType,
   RESULT_TYPE,
   PATH extends string
 > extends QueryParameterAPI<Method.get, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, RESULT_TYPE, PATH> {}
 
 export interface DeleteAPI<
-  PATH_PARAMETER_TYPE extends PathParametersType | undefined,
-  QUERY_PARAMETER_TYPE extends QueryParametersType | undefined,
+  PATH_PARAMETER_TYPE extends PathParametersType,
+  QUERY_PARAMETER_TYPE extends QueryParametersType,
   RESULT_TYPE,
   PATH extends string
 > extends QueryParameterAPI<Method.delete, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, RESULT_TYPE, PATH> {}
 
 export interface PutAPI<
-  PATH_PARAMETER_TYPE extends PathParametersType | undefined,
+  PATH_PARAMETER_TYPE extends PathParametersType,
   BODY_PARAMETER_TYPE,
   RESULT_TYPE,
   PATH extends string
 > extends BodyParameterAPI<Method.put, PATH_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH> {}
 
 export interface PostAPI<
-  PATH_PARAMETER_TYPE extends PathParametersType | undefined,
+  PATH_PARAMETER_TYPE extends PathParametersType,
   BODY_PARAMETER_TYPE,
   RESULT_TYPE,
   PATH extends string
 > extends BodyParameterAPI<Method.post, PATH_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH> {}
 
 export interface PatchAPI<
-  PATH_PARAMETER_TYPE extends PathParametersType | undefined,
+  PATH_PARAMETER_TYPE extends PathParametersType,
   BODY_PARAMETER_TYPE,
   RESULT_TYPE,
   PATH extends string
@@ -82,8 +83,8 @@ export interface PatchAPI<
 
 type ConditionalAPI<
   METHOD extends Method,
-  PATH_PARAMETER_TYPE extends PathParametersType | undefined,
-  QUERY_PARAMETER_TYPE extends QueryParametersType | undefined,
+  PATH_PARAMETER_TYPE extends PathParametersType,
+  QUERY_PARAMETER_TYPE extends QueryParametersType,
   BODY_PARAMETER_TYPE,
   RESULT_TYPE,
   PATH extends string
@@ -111,8 +112,8 @@ const methodAndPathPairsAlreadySpecified = new Map<string, string>()
 
 function create<
   METHOD extends Method,
-  PATH_PARAMETER_TYPE extends PathParametersType | undefined,
-  QUERY_PARAMETER_TYPE extends QueryParametersType | undefined,
+  PATH_PARAMETER_TYPE extends PathParametersType,
+  QUERY_PARAMETER_TYPE extends QueryParametersType,
   BODY_PARAMETER_TYPE,
   RESULT_TYPE,
   PATH extends string
@@ -145,8 +146,8 @@ function create<
 }
 
 function createReturns<
-  PATH_PARAMETER_TYPE extends PathParametersType | undefined,
-  QUERY_PARAMETER_TYPE extends QueryParametersType | undefined,
+  PATH_PARAMETER_TYPE extends PathParametersType,
+  QUERY_PARAMETER_TYPE extends QueryParametersType,
   BODY_PARAMETER_TYPE,
   METHOD extends Method
 >(method: METHOD) {
@@ -164,7 +165,7 @@ function createReturns<
   return { Returns, NoResultToReturn }
 }
 
-function createBodyParameter<PATH_PARAMETER_TYPE extends PathParametersType | undefined, METHOD extends Method>(
+function createBodyParameter<PATH_PARAMETER_TYPE extends PathParametersType, METHOD extends Method>(
   method: METHOD
 ) {
   function BodyParameters<BODY_PARAMETER_TYPE>() {
@@ -175,7 +176,7 @@ function createBodyParameter<PATH_PARAMETER_TYPE extends PathParametersType | un
   return { BodyParameters, NoBodyParameters }
 }
 
-function createQueryParameter<PATH_PARAMETER_TYPE extends PathParametersType | undefined, METHOD extends Method>(
+function createQueryParameter<PATH_PARAMETER_TYPE extends PathParametersType, METHOD extends Method>(
   method: METHOD
 ) {
   function QueryParameters<QUERY_PARAMETER_TYPE extends QueryParametersType>() {

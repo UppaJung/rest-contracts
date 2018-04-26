@@ -11,6 +11,6 @@
   "dependencies": {
     "rest-contracts": "0.9.9",
     "rest-contracts-browser-client": "0.5.2",
-    "rest-contracts-express-server": "0.5.2"
+    "rest-contracts-express-server": "0.5.6"
   }
 }
