@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "target": "es2017",
+    "module": "commonjs",
+    "lib": [
+      "es2017"
+    ],
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "pretty": true,
+    "sourceMap": true,
+    "outDir": "lib"
+  },
+  "include": [
+    "./src"
+  ],
+  "compileOnSave": false,
+  "buildOnSave": false
+}
