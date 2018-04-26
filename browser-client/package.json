@@ -8,7 +8,7 @@
   "typings": "typings/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/UppaJung/rest-contracts-browser-client"
+    "url": "https://github.com/UppaJung/rest-contracts"
   },
   "keywords": [
     "TypeScript",
