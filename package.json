@@ -22,6 +22,11 @@
     "Server",
     "Browser"
   ],
+  "contributors": [
+    "Jitae Kim",
+    "Woohyeon Roh",
+    "송승근 (Seunggeun Song)"
+  ],
   "author": "Stuart Schechter",
   "license": "MIT",
   "engines": {
