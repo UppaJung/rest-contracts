@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.9.13"></a>
+## [0.9.13](https://github.com/UppaJung/rest-contracts/compare/v0.9.12...v0.9.13) (2018-04-26)
+
+
+
 <a name="0.9.12"></a>
 ## [0.9.12](https://github.com/UppaJung/rest-contracts/compare/v0.9.11...v0.9.12) (2018-04-25)
 
