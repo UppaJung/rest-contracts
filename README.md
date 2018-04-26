@@ -1,5 +1,9 @@
 # REST Contracts:
 
+##  *Important* -- do not rely on this package quite yet.
+
+We've been moving it from another project that relies upon it, and until we get the reconfiguration set up for it to work independently without problems you should hold off.  We hope to be ready by April 28.  This message will go away when it is.
+
 ## A Simple TypeScript Library for defining REST APIs
 
 REST Contracts were designed for web services that run TypeScript on both their back-end (API server/provider) and front-end (API client/consumer), and want a light-weigh way to:
