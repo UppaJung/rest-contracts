@@ -1,14 +1,14 @@
 import * as RestContracts from "../../rest-contracts";
 
 export interface Excuse {
-  id: number;
+  id: string;
   quality: 'Solid' | 'Iffy' | 'Lousy';
   description: string;
 }
 
 export const Get =
   RestContracts.CreateAPI.Get
-  .PathParameters<{ id: number }>()
+  .PathParameters<{ id: string }>()
   .NoQueryParameters
   .Returns<Excuse>()
   .Path('/excuses/:id/');

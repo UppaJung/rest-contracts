@@ -2,7 +2,7 @@ import RestContracts from "rest-contracts";
 
 enum ExcuseQuality {Solid = "solid", Iffy = "iffy", Lame = "lame"};
 export interface Excuse {
-  id: number;
+  id: string;
   quality: ExcuseQuality;
   description: string;
 }
@@ -11,7 +11,7 @@ export interface Excuse {
 namespace ExcuseAPI {
   export const Get =
     RestContracts.CreateAPI.Get
-    .PathParameters<{ id: number }>()
+    .PathParameters<{ id: string }>()
     .NoQueryParameters
     .Returns<Excuse>()
     .Path('/excuses/:id/');
@@ -52,7 +52,7 @@ const ourApi = new RestContractsExpressServer(router);
 
 // Best to create a new file here, import the ourApi class,
 // and separate implementations into different files.
-const excuseMemoryTable = new Map<number, Excuse>();
+const excuseMemoryTable = new Map<Excuse["id"], Excuse>();
 
 // req, res, & next are still available to you.
 ourApi.implement(ExcuseAPI.Put, (params, req, res, next) => {
@@ -83,7 +83,7 @@ const excuseClient = {
 };
 
 excuseClient.put({
-  id: 1,
+  id: "df458df",
   quality: ExcuseQuality.Lame,
   description: "I don't use TypeScript I enjoy debugging type errors in production software.",
 });
