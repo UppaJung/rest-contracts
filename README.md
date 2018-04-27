@@ -38,8 +38,8 @@ The result is a complete contract.
 
 A full contract for a data type (e.g. an Excuse object) might look something like this, with a GET request for individaul objects, a GET request for multiple objects, and a PUT request to add items.
 
-excuse-contract.ts
 ```ts
+// excuse-contract.ts
 import * as RestContracts from "rest-contracts";
 
 export enum ExcuseQuality {
@@ -82,8 +82,8 @@ The Get, Query, and Put objects generated in this example contain a path and met
 
 To create servers implement the API in these contracts, you can currently used rest-contracts-express-server, or implement your own.  (A module for AWS lambda is forthcoming.)
 
-server.ts
 ```ts
+// server.ts
 import * as bodyParser from "body-parser";
 import * as express from "express";
 import * as RestContracts from "rest-contracts";
@@ -139,8 +139,8 @@ export function run(): void {
 
 To automatically build client functions to call the API in the contract, we have a minimal rest-contracts-browser-client, which has no dependencies so that it can run compactly in the browser, and rest-contracts-axios-client, which builds on top of axios so that it can run within node or in the browser.  Since our example runs on node, it uses the latter.
 
-client.ts
 ```ts
+// client.ts
 import * as RestContracts from "rest-contracts";
 import {getClientCreationFunction} from "rest-contracts-axios-client";
 import * as ExcuseContract from "./excuse-contract";
