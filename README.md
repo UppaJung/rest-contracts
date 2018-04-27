@@ -1,14 +1,14 @@
-# REST Contracts:
-## A Simple TypeScript Library for defining REST APIs
+# REST Contracts
+## A Simple TypeScript Library for Defining REST APIs
 
 REST Contracts were designed for web services that run TypeScript on both their back-end (API server/provider) and front-end (API client/consumer), and want a light-weigh way to:
  * specify the inputs and outputs of each API call,
  * automatically generate typed promise-based client functions used to access the API,
-  * calls should have typed inputs so that TypeScript can validate them
-  * calls should provide the correct return type for the response
+   - calls should have typed inputs so that TypeScript can validate them
+   - calls should provide the correct return type for the response
  * use typescript to simplify writing the API implementation on the server
-  * support wrappers that automtically populate the specified types
-  * validate that APIs return the specified type
+   - support wrappers that automtically populate the specified types
+   - validate that APIs return the specified type
 
 ### REST Contracts use auto-complete to help make writing APIs easy.
 
