@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pawsong/rest-contracts.git"
+    "url": "git+https://github.com/uppajung/rest-contracts.git"
   },
   "devDependencies": {
     "lerna": "^2.11.0"
