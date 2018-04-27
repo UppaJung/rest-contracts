@@ -1,7 +1,7 @@
 # REST-Contracts
 ## A Set of Simple TypeScript Libraries for Defining REST APIs
 
-REST Contracts were designed for web services that run TypeScript on both their back-end (API server/provider) and front-end (API client/consumer), and want a light-weigh way to:
+The REST-Contracts set of packages were designed for web services that run TypeScript on both their back-end (API server/provider) and front-end (API client/consumer), and want a light-weight way to:
  * specify the inputs and outputs of each API call
  * automatically generate typed API client functions
    - each function's parameters are typed so that TypeScript can enforce the contract
@@ -76,7 +76,7 @@ export const Put =
   .Path("/excuses/");
 ```
 
-The Get, Query, and Put objects generated in this example contain a path and method.  More importantly, they have attached extensive type information about the parameters and return type that describe how each should be used.  These types are consumed by packages that implement the APIs on the server side that expose these interfaces and that build client functions to call APIs that do compile-time checking of compliance with the interface contract.
+The Get, Query, and Put objects generated in this example contain a path and method.  More importantly, the compiler attaches to these objects additional type information that defines parameters and return type of each API call.  These attached types are consumed by packages that help you to implement the APIs on the server side that implement client functions to allow client code to call these APIs--providing compile-time checking of compliance with the interface contract on both sides.
 
 ### REST-contracts server packages simplify correct API implementation.
 
@@ -198,7 +198,7 @@ export async function run(): Promise<void> {
 }
 ```
 
-You can download the working example from the example directory of the repository on GitHub.
+You can download the working example from the package/rest-contracts-example directory of the repository on GitHub, or download it as an npm package.
 
 ## Contributing
 
@@ -211,5 +211,6 @@ git clone https://github.com/UppaJung/rest-contracts.git
 yarn
 ```
 
+The only thing we love more than carefully-crafted pull requests are the people who contribute them.
 
 [![lerna](https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg)](https://lernajs.io/)

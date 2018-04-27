@@ -1,16 +1,16 @@
-# REST Contracts:
-## A Simple TypeScript Library for defining REST APIs
+# REST-Contracts
+## A Set of Simple TypeScript Libraries for Defining REST APIs
 
-REST Contracts were designed for web services that run TypeScript on both their back-end (API server/provider) and front-end (API client/consumer), and want a light-weigh way to:
- * specify the inputs and outputs of each API call,
- * automatically generate typed promise-based client functions used to access the API,
-  * calls should have typed inputs so that TypeScript can validate them
-  * calls should provide the correct return type for the response
- * use typescript to simplify writing the API implementation on the server
-  * support wrappers that automtically populate the specified types
-  * validate that APIs return the specified type
+The REST-Contracts set of packages were designed for web services that run TypeScript on both their back-end (API server/provider) and front-end (API client/consumer), and want a light-weight way to:
+ * specify the inputs and outputs of each API call
+ * automatically generate typed API client functions
+   - each function's parameters are typed so that TypeScript can enforce the contract
+   - each function returns a Promise for the result type specified in the contract
+ * use TypeScript to simplify implementing the API service while reducing errors
+   - parameters arrive to your code with the typeps specified in the contract
+   - the type checker verifies that your implementation returns the type specified in the contract
 
-### REST Contracts use auto-complete to help make writing APIs easy.
+### REST-contracts uses auto-complete to help make writing APIs easy.
 
 First, you can use auto-complete to pick an HTTP REST method.
 
@@ -38,8 +38,8 @@ The result is a complete contract.
 
 A full contract for a data type (e.g. an Excuse object) might look something like this, with a GET request for individaul objects, a GET request for multiple objects, and a PUT request to add items.
 
-excuse-contract.ts
 ```ts
+// excuse-contract.ts
 import * as RestContracts from "rest-contracts";
 
 export enum ExcuseQuality {
@@ -76,16 +76,18 @@ export const Put =
   .Path("/excuses/");
 ```
 
-The Get, Query, and Put objects generated in this example contain a path and method.  More importantly, they have attached extensive type information about the parameters and return type that describe how each should be used.  These types are consumed by packages that implement the APIs on the server side that expose these interfaces and that build client functions to call APIs that do compile-time checking of compliance with the interface contract.
+The Get, Query, and Put objects generated in this example contain a path and method.  More importantly, the compiler attaches to these objects additional type information that defines parameters and return type of each API call.  These attached types are consumed by packages that help you to implement the APIs on the server side that implement client functions to allow client code to call these APIs--providing compile-time checking of compliance with the interface contract on both sides.
+
+### REST-contracts server packages simplify correct API implementation.
 
 To create servers implement the API in these contracts, you can currently used rest-contracts-express-server, or implement your own.  (A module for AWS lambda is forthcoming.)
 
-server.ts
 ```ts
+// server.ts
 import * as bodyParser from "body-parser";
 import * as express from "express";
 import * as RestContracts from "rest-contracts";
-import * as RestContractsExpressServer from "./rest-contracts-express-server";
+import * as RestContractsExpressServer from "rest-contracts-express-server";
 import * as ExcuseContract from "./excuse-contract";
 
 // If you're using express, you'll still have to configure it,
@@ -133,12 +135,14 @@ export function run(): void {
 }
 ```
 
+### REST-contracts client packages build typed client functions for you.
+
 To automatically build client functions to call the API in the contract, we have a minimal rest-contracts-browser-client, which has no dependencies so that it can run compactly in the browser, and rest-contracts-axios-client, which builds on top of axios so that it can run within node or in the browser.  Since our example runs on node, it uses the latter.
 
-client.ts
 ```ts
+// client.ts
 import * as RestContracts from "rest-contracts";
-import {getClientCreationFunction} from "./rest-contracts-axios-client";
+import {getClientCreationFunction} from "rest-contracts-axios-client";
 import * as ExcuseContract from "./excuse-contract";
 
 // To create client calls, the factory needs the URL and any default configuration settings
@@ -194,7 +198,7 @@ export async function run(): Promise<void> {
 }
 ```
 
-You can download the working example from the example directory of the repository on GitHub.
+You can download the working example from the package/rest-contracts-example directory of the repository on GitHub, or download it as an npm package.
 
 ## Contributing
 
@@ -204,7 +208,9 @@ Make sure you're using yarn version >= 1 and have the shx package installed glob
 npm install -g yarn@latest
 npm install -g shx
 git clone https://github.com/UppaJung/rest-contracts.git
+yarn
 ```
 
+The only thing we love more than carefully-crafted pull requests are the people who contribute them.
 
 [![lerna](https://img.shields.io/badge/maintained%20with-lerna-cc00ff.svg)](https://lernajs.io/)
