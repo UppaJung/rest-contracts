@@ -1,6 +1,6 @@
 {
   "name": "rest-contracts",
-  "version": "0.9.13",
+  "version": "0.9.14",
   "description": "TypeScript library for declaring REST interfaces for access by client and server.",
   "main": "lib/index.js",
   "module": "lib-esm/index.js",
@@ -103,7 +103,6 @@
       }
     }
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/jest": "20.0.2",
     "@types/node": "7.0.31",

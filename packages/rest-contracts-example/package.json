@@ -1,6 +1,6 @@
 {
   "name": "rest-contracts-example",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "An example using rest-contracts",
   "scripts": {
     "start": "ts-node src/index.ts",
@@ -10,11 +10,11 @@
   "license": "MIT",
   "dependencies": {
     "rest-contracts": "0.9.9",
-    "rest-contracts-browser-client": "0.5.2",
-    "rest-contracts-express-server": "0.5.6"
+    "rest-contracts-browser-client": "^0.6.0",
+    "rest-contracts-express-server": "^0.6.0"
   },
   "devDependencies": {
-    "rest-contracts-axios-client": "0.5.1",
+    "rest-contracts-axios-client": "^0.6.0",
     "ts-node": "^6.0.1",
     "typescript": "^2.8.3"
   }
