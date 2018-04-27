@@ -16,3 +16,7 @@ async function run() {
   // All done
   console.log("All done.");
 }
+
+run().then(() => {
+  process.exit(0);
+})

@@ -3,7 +3,7 @@ import {getClientCreationFunction} from "rest-contracts-axios-client";
 import * as RestContractsExpressServer from "rest-contracts-express-server";
 import * as ExcuseContract from "./excuse-contract";
 
-const createRequestFunction = getClientCreationFunction  ("http://localhost:5000/", {timeout: 5000});
+const createRequestFunction = getClientCreationFunction  ("http://localhost:5000", {timeout: 5000});
 
 const excuseClient = {
   get: createRequestFunction(ExcuseContract.Get),

@@ -1,6 +1,10 @@
 *.log
+*.swp
 .idea
 .DS_Store
+lerna-debug.log
+yarn-error.log
+package-lock.json
 node_modules
 
 coverage
