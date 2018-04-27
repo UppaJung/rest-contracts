@@ -16,3 +16,5 @@ async function run() {
   // All done
   console.log("All done.");
 }
+
+run();
