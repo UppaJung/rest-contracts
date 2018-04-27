@@ -204,6 +204,7 @@ Make sure you're using yarn version >= 1 and have the shx package installed glob
 npm install -g yarn@latest
 npm install -g shx
 git clone https://github.com/UppaJung/rest-contracts.git
+yarn
 ```
 
 
