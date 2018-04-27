@@ -1,9 +1,9 @@
 {
-  "name": "rest-contracts",
-  "version": "0.9.13",
-  "description": "TypeScript library for declaring REST interfaces for access by client and server.",
-  "main": "umd/rest-contracts.js",
-  "module": "lib/index.js",
+  "name": "rest-contracts-browser-client",
+  "version": "0.5.2",
+  "description": "Builds TypeScript client functions for REST APIs specified via the rest-contracts package.",
+  "main": "lib/index.js",
+  "module": "lib-esm/index.js",
   "es2015": "lib-esm/index.js",
   "typings": "typings/index.d.ts",
   "repository": {
@@ -15,17 +15,13 @@
     "REST",
     "API",
     "AJAX",
+    "rest-contracts",
     "Contract",
     "Types",
     "Interfaces",
     "Client",
     "Server",
     "Browser"
-  ],
-  "contributors": [
-    "Jitae Kim",
-    "Woohyeon Roh",
-    "송승근 (Seunggeun Song)"
   ],
   "author": "Stuart Schechter",
   "license": "MIT",
@@ -35,7 +31,9 @@
   "scripts": {
     "cleanup": "shx rm -rf umd lib lib-esm lib-fesm typings coverage docs",
     "prebuild": "npm run cleanup && npm run verify",
-    "build": " tsc && tsc --target es2017 --outDir lib-esm && webpack && webpack --env.prod",
+    "build": "npm run build:lib && npm run build:lib-esm && webpack && webpack --env.prod",
+    "build:lib": "tsc",
+    "build:lib-esm": "tsc --target es2017 --module esnext --outDir lib-esm",
     "build:fesm:min": "uglifyjs lib-fesm/index.js --compress --mangle --source-map --output lib-fesm/index.min.js",
     "docs": "typedoc -p . --theme minimal --target 'es6' --excludeNotExported --excludePrivate --ignoreCompilerErrors --exclude \"**/src/**/__tests__/*.*\" --out docs src/",
     "test": "jest",
@@ -53,7 +51,6 @@
     "postrelease": "npm run release:github && npm run release:npm",
     "release:github": "git push --no-verify --follow-tags origin master",
     "release:npm": "npm publish",
-    "release:preflight:package": "npm pack",
     "size": "shx echo \"Gzipped Size:\" && cross-var strip-json-comments --no-whitespace $npm_package_main | gzip-size"
   },
   "config": {
@@ -76,7 +73,7 @@
       "<rootDir>/src"
     ],
     "transform": {
-      "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+      "^.+\\.tsx?$": "<rootDir>/../../node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
     "moduleFileExtensions": [
@@ -101,7 +98,9 @@
       }
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "rest-contracts": "0.9.9"
+  },
   "devDependencies": {
     "@types/jest": "20.0.2",
     "@types/node": "7.0.31",
@@ -120,7 +119,7 @@
     "tslint": "5.9.1",
     "tslint-config-prettier": "1.12.0",
     "tslint-config-standard": "6.0.1",
-    "tslint-react": "3.0.0",
+    "tslint-react": "3.5.1",
     "typedoc": "0.7.1",
     "typescript": "2.8.3",
     "uglify-js": "git://github.com/mishoo/UglifyJS2#harmony-v2.8.22",

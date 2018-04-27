@@ -1,5 +1,5 @@
 import * as RestContracts from "rest-contracts";
-import {getClientCreationFunction} from "./rest-contracts-axios-client";
+import {getClientCreationFunction} from "rest-contracts-axios-client";
 import * as ExcuseContract from "./excuse-contract";
 
 // To create client calls, the factory needs the URL and any default configuration settings

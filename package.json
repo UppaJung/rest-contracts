@@ -1,0 +1,20 @@
+{
+  "name": "rest-contracts-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "lerna run build",
+    "example": "lerna run start --scope \"rest-contracts-example\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pawsong/rest-contracts.git"
+  },
+  "devDependencies": {
+    "lerna": "^2.11.0"
+  }
+}

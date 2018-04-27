@@ -1,9 +1,10 @@
 {
-  "name": "rest-contracts-axios-client",
-  "version": "0.5.1",
-  "description": "Uses axios to build TypeScript client functions for REST APIs specified via the rest-contracts package.",
-  "main": "umd/rest-contracts-axios-client.js",
-  "module": "lib/index.js",
+  "name": "rest-contracts-express-server",
+  "version": "0.5.6",
+  "description": "Provides a TypeScript class for implementing REST APIs specified via rest-contracts with express.",
+  "main": "lib/index.js",
+  "module": "lib-esm/index.js",
+  "es2015": "lib-esm/index.js",
   "typings": "typings/index.d.ts",
   "repository": {
     "type": "git",
@@ -15,7 +16,7 @@
     "API",
     "AJAX",
     "rest-contracts",
-    "axios",
+    "restful",
     "Contract",
     "Types",
     "Interfaces",
@@ -31,7 +32,10 @@
   "scripts": {
     "cleanup": "shx rm -rf umd lib lib-esm lib-fesm typings coverage docs",
     "prebuild": "npm run cleanup && npm run verify",
-    "build": " tsc && tsc --target es2017 --outDir lib-esm && webpack && webpack --env.prod",
+    "build": "npm run build:lib && npm run build:lib-esm",
+    "build:lib": "tsc",
+    "build:lib-esm": "tsc --target es2017 --module esnext --outDir lib-esm",
+    "build:fesm:min": "uglifyjs lib-fesm/index.js --compress --mangle --source-map --output lib-fesm/index.min.js",
     "docs": "typedoc -p . --theme minimal --target 'es6' --excludeNotExported --excludePrivate --ignoreCompilerErrors --exclude \"**/src/**/__tests__/*.*\" --out docs src/",
     "test": "jest",
     "test:watch": "npm test -- --watch",
@@ -70,7 +74,7 @@
       "<rootDir>/src"
     ],
     "transform": {
-      "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+      "^.+\\.tsx?$": "<rootDir>/../../node_modules/ts-jest/preprocessor.js"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
     "moduleFileExtensions": [
@@ -96,8 +100,9 @@
     }
   },
   "dependencies": {
-    "axios": "^0.18.0",
-    "rest-contracts": "^0.9.13"
+    "@types/express": "4.11.1",
+    "express": "4.16.3",
+    "rest-contracts": "0.9.12"
   },
   "devDependencies": {
     "@types/jest": "20.0.2",
@@ -119,10 +124,6 @@
     "tslint-config-standard": "6.0.1",
     "tslint-react": "3.5.1",
     "typedoc": "0.7.1",
-    "typescript": "2.8.3",
-    "uglify-js": "git://github.com/mishoo/UglifyJS2#harmony-v2.8.22",
-    "uglifyjs-webpack-plugin": "0.4.5",
-    "webpack": "3.0.0",
-    "webpack-config-utils": "2.3.0"
+    "typescript": "2.8.3"
   }
 }
