@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "An example using rest-contracts",
   "scripts": {
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "example:debug": "node --inspect=9229 --debug-brk lib/index.js"
   },
   "author": "Stuart Schechter",
   "license": "MIT",

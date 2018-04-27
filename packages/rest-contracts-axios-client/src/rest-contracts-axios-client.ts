@@ -106,6 +106,8 @@ export function requestFactory<API extends RestContracts.API<RestContracts.Metho
   defaultOptions: RequestOptions,
   api: API
 ) {
+  // Remove any trailing slashes from the base URL since the path will start with a slash
+  baseUrl = baseUrl.replace(/\/+$/, "")
   const {method} = api;
   const pathWithStartingSlash = (
     (baseUrl.length > 0 && baseUrl.charAt(baseUrl.length - 1) !== "/" && api.path.length > 0 && api.path.charAt(0) !== "/") ?
