@@ -14,27 +14,27 @@ The REST-Contracts set of packages were designed for web services that run TypeS
 
 First, you can use auto-complete to pick an HTTP REST method.
 
-![Intellisense shows you the Method options avaialble](images/method-choice.png?raw=true)
+![Intellisense shows you the Method options avaialble](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/method-choice.png?raw=true)
 
 Then, you choose whether your method will have path paramters.
 
-![Intellisense gives you the option to specify path parameters, or no path parameters](images/get-path-parameters.png?raw=true)
+![Intellisense gives you the option to specify path parameters, or no path parameters](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-path-parameters.png?raw=true)
 
 Next, you specify query parameters (get & delete method) or body parameters (put, post, & patch).
 
-![Intellisense gives you the option to specify query/body parameters, or none](images/get-query-parameters.png?raw=true)
+![Intellisense gives you the option to specify query/body parameters, or none](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-query-parameters.png?raw=true)
 
 You then specify a result, or choose to return no result.
 
-![Intellisense gives you the option to specify a result or return no result (void)](images/get-returns.png?raw=true)
+![Intellisense gives you the option to specify a result or return no result (void)](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-returns.png?raw=true)
 
 Finally, you choose the specify the path.  Any path parameters should appear between slashes and be preceded by a colon (":").
 
-![Intellisense indicates where to specify the path.](images/get-path.png?raw=true)
+![Intellisense indicates where to specify the path.](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-path.png?raw=true)
 
 The result is a complete contract.
 
-![A complete contract for a REST GET API.](images/get-complete.png?raw=true)
+![A complete contract for a REST GET API.](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-complete.png?raw=true)
 
 A full contract for a data type (e.g. an Excuse object) might look something like this, with a GET request for individaul objects, a GET request for multiple objects, and a PUT request to add items.
 
