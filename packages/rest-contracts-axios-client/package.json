@@ -1,6 +1,6 @@
 {
   "name": "rest-contracts-axios-client",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "Uses axios to build TypeScript client functions for REST APIs specified via the rest-contracts package.",
   "main": "lib/index.js",
   "module": "lib-esm/index.js",
@@ -99,7 +99,7 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
-    "rest-contracts": "^0.9.17"
+    "rest-contracts": "^0.9.18"
   },
   "devDependencies": {
     "@types/jest": "20.0.2",
