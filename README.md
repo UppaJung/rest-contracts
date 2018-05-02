@@ -1,13 +1,13 @@
 # REST-Contracts
-## A Set of Simple TypeScript Libraries for Defining REST APIs
+## Minimalist TypeScript Libraries for Defining & Implementing REST APIs
 
 The REST-Contracts set of packages were designed for web services that run TypeScript on both their back-end (API server/provider) and front-end (API client/consumer), and want a light-weight way to:
  * specify the inputs and outputs of each API call
  * automatically generate typed API client functions
-   - each function's parameters are typed so that TypeScript can enforce the contract
-   - each function returns a Promise for the result type specified in the contract
+   - with types for each function's parameters so that TypeScript can enforce the contract
+   - with each function returning a Promise for the result type specified in the contract
  * use TypeScript to simplify implementing the API service while reducing errors
-   - parameters arrive to your code with the typeps specified in the contract
+   - parameters arrive to your code with the types specified in the contract
    - the type checker verifies that your implementation returns the type specified in the contract
 
 ### REST-contracts uses auto-complete to help make writing APIs easy.
@@ -167,7 +167,7 @@ export async function run(): Promise<void> {
     await excuseClient.put({
       id: "df458df",
       quality: ExcuseContract.ExcuseQuality.Poor,
-      description: "I don't use TypeScript I enjoy debugging type errors in production software.",
+      description: "I don't use TypeScript because I enjoy debugging type errors in production software.",
     });
 
     console.log("Put the first excuse");
