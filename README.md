@@ -7,7 +7,7 @@ The REST-Contracts set of packages were designed for web services that run TypeS
    - with types for each function's parameters so that TypeScript can enforce the contract
    - with each function returning a Promise for the result type specified in the contract
  * use TypeScript to simplify implementing the API service while reducing errors
-   - parameters arrive to your code with the types specified in the contract
+   - parameters arrive to your code with the typeps specified in the contract
    - the type checker verifies that your implementation returns the type specified in the contract
 
 ### REST-contracts uses auto-complete to help make writing APIs easy.
@@ -80,7 +80,7 @@ The Get, Query, and Put objects generated in this example contain a path and met
 
 ### REST-contracts server packages simplify correct API implementation.
 
-To create servers implement the API in these contracts, you can currently used rest-contracts-express-server, or implement your own.  (A module for AWS lambda is forthcoming.)
+To create servers implement the API in these contracts, you can currently used rest-contracts-express-server, rest-contracts-lambda, or implement your own.
 
 ```ts
 // server.ts
