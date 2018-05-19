@@ -38,7 +38,6 @@ function assemblePath(
   return {pathWithParameters, remainingParameters};
 }
 
-
 function encodeQueryItem(key: string, value: string | number | boolean | null | undefined): string {
   return encodeURIComponent(key) + "=" + encodeURIComponent(
     (typeof(value) === "number") ?
@@ -67,6 +66,85 @@ function addQueryToUrl(url: string, params: RestContracts.QueryParametersType = 
 
   return result;
 }
+
+export interface ClientException {
+  status?: number;
+  statusText?: string;
+  responseText?: string;
+}
+
+function isExceptionWithStatus(err: any): err is {status: number} {
+  return typeof(err) === "object" && "status" in err && typeof(err.status) === "number";
+}
+
+export const HttpStatusCodes = {
+  // CONTINUE: 100,
+  // SWITCHING_PROTOCOLS: 101,
+  // PROCESSING: 102,
+  OK: 200,
+  // CREATED: 201,
+  // ACCEPTED: 202,
+  // NON_AUTHORITATIVE_INFORMATION: 203,
+  // RESET_CONTENT: 205,
+  // PARTIAL_CONTENT: 206,
+  // MULTI_STATUS: 207,
+  HIGHEST_POSSIBLE_SUCCESS_STATUS: 299,
+  // MULTIPLE_CHOICES: 300,
+  // MOVED_PERMANENTLY: 301,
+  // MOVED_TEMPORARILY: 302,
+  // SEE_OTHER: 303,
+  // NOT_MODIFIED: 304,
+  // USE_PROXY: 305,
+  // TEMPORARY_REDIRECT: 307,
+  // PERMANENT_REDIRECT: 308,
+  // BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  // PAYMENT_REQUIRED: 402,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  // METHOD_NOT_ALLOWED: 405,
+  // NOT_ACCEPTABLE: 406,
+  // PROXY_AUTHENTICATION_REQUIRED: 407,
+  // REQUEST_TIMEOUT: 408,
+  // CONFLICT: 409,
+  // GONE: 410,
+  // LENGTH_REQUIRED: 411,
+  // PRECONDITION_FAILED: 412,
+  // REQUEST_TOO_LONG: 413,
+  // REQUEST_URI_TOO_LONG: 414,
+  // UNSUPPORTED_MEDIA_TYPE: 415,
+  // REQUESTED_RANGE_NOT_SATISFIABLE: 416,
+  // EXPECTATION_FAILED: 417,
+  // INSUFFICIENT_SPACE_ON_RESOURCE: 419,
+  // METHOD_FAILURE: 420,
+  // UNPROCESSABLE_ENTITY: 422,
+  // FAILED_DEPENDENCY: 424,
+  // PRECONDITION_REQUIRED: 428,
+  // TOO_MANY_REQUESTS: 429,
+  // REQUEST_HEADER_FIELDS_TOO_LARGE: 431,
+  // INTERNAL_SERVER_ERROR: 500,
+  // NOT_IMPLEMENTED: 501,
+//  BAD_GATEWAY: 502,
+//  SERVICE_UNAVAILABLE: 503,
+//  GATEWAY_TIMEOUT: 504,
+//  HTTP_VERSION_NOT_SUPPORTED: 505,
+//  INSUFFICIENT_STORAGE: 507,
+//  NETWORK_AUTHENTICATION_REQUIRED: 511,
+};
+
+export const ExceptionChecks = {
+  isUnauthorized: (err: any) =>
+    isExceptionWithStatus(err) && err.status === HttpStatusCodes.UNAUTHORIZED,
+  isForbidden: (err: any) =>
+    isExceptionWithStatus(err) && err.status === HttpStatusCodes.FORBIDDEN,
+  isUnauthorizedOrForbidden: (err: any) =>
+    isExceptionWithStatus(err) && (
+      err.status === HttpStatusCodes.UNAUTHORIZED || err.status === HttpStatusCodes.FORBIDDEN
+    ),
+  isNotFound: (err: any) =>
+    isExceptionWithStatus(err) && err.status === HttpStatusCodes.NOT_FOUND,
+};
+
 
 export interface RequestOptions {
   timeoutInMs?: number;
@@ -120,29 +198,28 @@ function request<T>(params: RequestOptions & {
       xhr.onload = (event) => {
         const {status, statusText, responseText} = xhr;
         // const responseHeaders = xhr.getAllResponseHeaders().split("\n");
-        // tslint:disable-next-line:no-magic-numbers
-        const success = xhr.status >= 200 && xhr.status < 300;
+        const success = xhr.status >= HttpStatusCodes.OK && xhr.status <= HttpStatusCodes.HIGHEST_POSSIBLE_SUCCESS_STATUS;
         if (!success) {
-          reject({status, statusText, responseText});
+          reject({status, statusText, responseText} as ClientException);
         } else {
           let responseJSON;
           try {
             responseJSON = JSON.parse(responseText || "");
             resolve(responseJSON);
           } catch (e) {
-            reject({status, statusText: "JSON Parse error", responseText});
+            reject({status, statusText: "JSON Parse error", responseText} as ClientException);
           }
         }
       };
 
       xhr.onerror = (event) => {
         const {status, statusText, responseText} = xhr;
-        reject({status, statusText, responseText});
+        reject({status, statusText, responseText} as ClientException);
       };
 
       xhr.ontimeout = (event) => {
         const {status, statusText, responseText} = xhr;
-        reject({status, statusText, responseText});
+        reject({status, statusText, responseText} as ClientException);
       };
 
       if ( (
