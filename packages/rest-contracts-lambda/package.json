@@ -100,8 +100,10 @@
     }
   },
   "dependencies": {
-    "@types/aws-lambda": "8.10.3",
-    "rest-contracts": "0.9.12"
+    "@types/aws-lambda": "8.10.3"
+  },
+  "peerDependencies": {
+    "rest-contracts": "0.9.x"
   },
   "devDependencies": {
     "@types/jest": "20.0.2",
