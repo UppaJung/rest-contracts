@@ -80,7 +80,7 @@ The Get, Query, and Put objects generated in this example contain a path and met
 
 ### REST-contracts server packages simplify correct API implementation.
 
-To create servers implement the API in these contracts, you can currently used rest-contracts-express-server, or implement your own.  (A module for AWS lambda is forthcoming.)
+To create servers implement the API in these contracts, you can currently used rest-contracts-express-server, rest-contracts-lambda, or implement your own.
 
 ```ts
 // server.ts
