@@ -1,6 +1,6 @@
 {
   "name": "rest-contracts-browser-client",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "Builds TypeScript client functions for REST APIs specified via the rest-contracts package.",
   "main": "lib/index.js",
   "module": "lib-esm/index.js",

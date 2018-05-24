@@ -1,6 +1,6 @@
 {
   "name": "rest-contracts-lambda",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Provides a TypeScript class for implementing REST APIs specified via rest-contracts with AWS lambda.",
   "main": "lib/index.js",
   "module": "lib-esm/index.js",
@@ -102,9 +102,6 @@
   "dependencies": {
     "@types/aws-lambda": "8.10.3"
   },
-  "peerDependencies": {
-    "rest-contracts": "0.9.x"
-  },
   "devDependencies": {
     "@types/jest": "20.0.2",
     "@types/node": "7.0.31",
@@ -116,6 +113,7 @@
     "husky": "0.14.1",
     "jest": "20.0.4",
     "lint-staged": "4.0.0",
+    "rest-contracts": "^0.9.20",
     "shx": "0.2.2",
     "standard-version": "4.2.0",
     "strip-json-comments-cli": "1.0.1",
