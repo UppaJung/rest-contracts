@@ -1,6 +1,5 @@
 import * as Lambda from "aws-lambda";
 import * as RestContracts from "rest-contracts";
-import { RESULT } from "rest-contracts";
 
 export interface APIGatewayProxyEvent<API extends RestContracts.API> extends Lambda.APIGatewayProxyEvent {
   pathParameters: RestContracts.PATH_PARAMS<API> | null;
@@ -26,6 +25,31 @@ export type LambdaErrorHandler = (
   err: any,
   callback: Lambda.APIGatewayProxyCallback
 ) => void;
+
+const defaultErrorHandler = (err: any, callback: Lambda.APIGatewayProxyCallback) => {
+  // Handle errors that provide a status code (via either status or statusCode field)
+  // and message
+  const statusCode: number | undefined =
+    (typeof(err.statusCode) === "number") ? err.statusCode :
+    (typeof(err.status) === "number") ? err.status :
+      undefined;
+  if (typeof(statusCode) === "number") {
+    // Errors that contain a status code are meant to be handled
+    // and return proper HTTP responses so that additional lambda
+    // integration resonses need not be configured
+    const handledError: Lambda.APIGatewayProxyResult = {
+      statusCode,
+      body: JSON.stringify(err)
+    }
+    callback(undefined, handledError);
+  } else {
+    // Error that do not contain a status code will be returned
+    // directly to lambda which will rely on the developer
+    // configuring an integration response for that error type
+    // https://docs.aws.amazon.com/apigateway/latest/developerguide/handle-errors-in-lambda-integration.html
+    return callback(err);
+  }
+}
 
 /**
  * Wrap a handler for a lambda API to automatically parse the body parameters,
@@ -58,16 +82,13 @@ export const wrapLambdaParameters = <API extends RestContracts.API>(
     event: AugmentedAPIGatewayProxyEvent<API>,
     context: Lambda.Context,
     callback: Lambda.APIGatewayProxyCallback
-  ) => PromiseLike<RestContracts.RESULT<API>> | RestContracts.RESULT<API>
-) => async (
+  ) => void
+) => (
   event: Lambda.APIGatewayProxyEvent,
   context: Lambda.Context,
   callback: Lambda.APIGatewayProxyCallback
 ) => {
-  const optionalBodyObject = {} as
-    API extends RestContracts.GetAPI<any, any, any, any> | RestContracts.DeleteAPI<any,any,any,any> ?
-      {} :
-      {bodyObject: RestContracts.BODY_PARAMS<API> | undefined};
+  const optionalBodyObject = {} as {bodyObject?: RestContracts.BODY_PARAMS<API>};
   if ( (api.method === RestContracts.Method.post ||
         api.method === RestContracts.Method.patch ||
         api.method === RestContracts.Method.put) &&
@@ -97,7 +118,7 @@ export const wrapLambdaParameters = <API extends RestContracts.API>(
     params
   } as AugmentedAPIGatewayProxyEvent<API>;
 
-  await handler( augmentedEvent, context, callback );
+  handler( augmentedEvent, context, callback );
 
   return;
 };
@@ -161,7 +182,7 @@ export const wrapLambdaParametersAndResult = <API extends RestContracts.API>(
     event: AugmentedAPIGatewayProxyEvent<API>,
     context: Lambda.Context,
     apiGatewayProxyResult: Partial<Lambda.APIGatewayProxyResult> & {headers: {[headerName: string]: string}}
-  ) => PromiseLike<RestContracts.RESULT<API>> | RestContracts.RESULT<API>,
+  ) => PromiseLike<RestContracts.RESULT<API>> | RestContracts.RESULT<API> | undefined,
   options?: {
     errorHandler?: LambdaErrorHandler,
     defaultHeaders?: {[headerName: string]: string},
@@ -176,7 +197,7 @@ export const wrapLambdaParametersAndResult = <API extends RestContracts.API>(
   const{
     errorHandler = defaultErrorHandler,
     defaultHeaders = {},
-    resultEncoding = "JSON",
+    resultEncoding = ResultEncoding.JSON,
     // tslint:disable-next-line:no-unnecessary-initializer
     corsDomains = undefined
   } = options || {};
@@ -207,6 +228,7 @@ export const wrapLambdaParametersAndResult = <API extends RestContracts.API>(
       const apiResult: Partial<Lambda.APIGatewayProxyResult> & {headers: {[headerName: string]: string}} = {
         headers
       };
+            // tslint:disable-next-line:await-promise
       const handlersResult = await handler( event, context, apiResult );
       // Create the correct statusCode for result provided by the handler
       // tslint:disable:no-magic-numbers
@@ -218,8 +240,8 @@ export const wrapLambdaParametersAndResult = <API extends RestContracts.API>(
 
       // Encode the body object as specified by the ResultEncoding option (JSON is default)
       const bodyObject = (
-          resultEncoding === ResultEncoding.RawString &&
-            typeof(handlersResult) === "string"
+          (typeof(handlersResult as any) === "string") &&
+          (resultEncoding === ResultEncoding.RawString)
         ) ? {
           body: handlersResult as string
         } : (
@@ -240,29 +262,4 @@ export const wrapLambdaParametersAndResult = <API extends RestContracts.API>(
       errorHandler(err, callback);
     }
   });
-}
-
-const defaultErrorHandler = (err: any, callback: Lambda.APIGatewayProxyCallback) => {
-  // Handle errors that provide a status code (via either status or statusCode field)
-  // and message
-  const statusCode: number | undefined =
-    (typeof(err.statusCode) === "number") ? err.statusCode :
-    (typeof(err.status) === "number") ? err.status :
-      undefined;
-  if (typeof(statusCode) === "number") {
-    // Errors that contain a status code are meant to be handled
-    // and return proper HTTP responses so that additional lambda
-    // integration resonses need not be configured
-    const handledError: Lambda.APIGatewayProxyResult = {
-      statusCode,
-      body: JSON.stringify(err)
-    }
-    callback(undefined, handledError);
-  } else {
-    // Error that do not contain a status code will be returned
-    // directly to lambda which will rely on the developer
-    // configuring an integration response for that error type
-    // https://docs.aws.amazon.com/apigateway/latest/developerguide/handle-errors-in-lambda-integration.html
-    return callback(err);
-  }
 }
