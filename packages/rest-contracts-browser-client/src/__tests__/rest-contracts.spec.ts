@@ -8,7 +8,7 @@ describe(`CreateAPI`, () => {
 
     const getMethodSpec = CreateAPI
       .Get
-      .PathParameters<{aPathParameter: number}>()
+      .PathParameters<{aPathParameter: string}>()
       .QueryParameters<{aQueryParameter: string}>()
       .Returns<string>()
       .Path("/api/:aPathParameter");
@@ -21,7 +21,7 @@ describe(`CreateAPI`, () => {
     const sampleFunctionCallingClient = async () => {
       // Not called as there's no api at example.com that would answer
       // here to make sure types match.
-      await getClient({aPathParameter: 8675309, aQueryParameter: "some string"});
+      await getClient({aPathParameter: "8675309", aQueryParameter: "some string"});
     };
     expect(typeof (sampleFunctionCallingClient)).toEqual("function");
   })

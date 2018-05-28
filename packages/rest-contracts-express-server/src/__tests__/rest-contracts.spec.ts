@@ -8,7 +8,7 @@ describe(`CreateAPI`, () => {
 
     const getMethodSpec = CreateAPI
       .Get
-      .PathParameters<{aPathParameter: number}>()
+      .PathParameters<{aPathParameter: string}>()
       .QueryParameters<{aQueryParameter: string}>()
       .Returns<string>()
       .Path("/api/:aPathParameter");

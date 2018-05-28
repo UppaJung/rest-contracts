@@ -14,7 +14,7 @@ export type QueryParametersType = {
 } |
 undefined;
 
-export interface API<
+export interface BaseAPI<
   METHOD extends Method = Method,
   PATH_PARAMETER_TYPE extends PathParametersType = any,
   QUERY_PARAMETER_TYPE extends QueryParametersType = any,
@@ -30,21 +30,30 @@ export interface API<
   method: METHOD
   allParams: QUERY_PARAMETER_TYPE & PATH_PARAMETER_TYPE & BODY_PARAMETER_TYPE
 }
+
 export interface QueryParameterAPI<
-  METHOD extends Method.get | Method.delete,
-  PATH_PARAMETER_TYPE extends PathParametersType,
-  QUERY_PARAMETER_TYPE extends QueryParametersType,
-  RESULT_TYPE,
-  PATH extends string
-> extends API<METHOD, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, undefined, RESULT_TYPE, PATH> {}
+  METHOD extends Method.get | Method.delete = Method.get | Method.delete,
+  PATH_PARAMETER_TYPE extends PathParametersType | undefined = any,
+  QUERY_PARAMETER_TYPE extends QueryParametersType | undefined = any,
+  RESULT_TYPE = any,
+  PATH extends string = string
+> extends BaseAPI<METHOD, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, undefined, RESULT_TYPE, PATH> {}
+export function isQueryParameterAPI(api: API): api is QueryParameterAPI {
+  return api.method === Method.get || api.method === Method.delete;
+}
 
 export interface BodyParameterAPI<
-  METHOD extends Method.put | Method.post | Method.patch,
-  PATH_PARAMETER_TYPE extends PathParametersType,
-  BODY_PARAMETER_TYPE,
-  RESULT_TYPE,
-  PATH extends string
-> extends API<METHOD, PATH_PARAMETER_TYPE, undefined, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH> {}
+  METHOD extends Method.put | Method.post | Method.patch = Method.put | Method.post | Method.patch,
+  PATH_PARAMETER_TYPE extends PathParametersType | undefined = any,
+  BODY_PARAMETER_TYPE = any,
+  RESULT_TYPE = any,
+  PATH extends string = string
+> extends BaseAPI<METHOD, PATH_PARAMETER_TYPE, undefined, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH> {}
+export function isBodyParameterAPI(api: API): api is BodyParameterAPI {
+  return api.method === Method.patch || api.method === Method.post || api.method === Method.put;
+}
+
+export type API = QueryParameterAPI | BodyParameterAPI;
 
 export interface GetAPI<
   PATH_PARAMETER_TYPE extends PathParametersType,
@@ -98,15 +107,16 @@ type ConditionalAPI<
         ? PutAPI<PATH_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH>
         : METHOD extends Method.put
           ? PutAPI<PATH_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH>
-          : API<METHOD, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH>
+          : never
 
-export type PATH_PARAMS<APITYPE extends API<Method, any, any, any, any, string>> = APITYPE['pathParams']
-export type QUERY_PARAMS<APITYPE extends API<Method, any, any, any, any, string>> = APITYPE['queryParams']
-export type BODY_PARAMS<APITYPE extends API<Method, any, any, any, any, string>> = APITYPE['bodyParams']
-export type ALL_PARAMS<APITYPE extends API<Method, any, any, any, any, string>> = APITYPE['pathParams'] &
-  APITYPE['queryParams'] &
-  APITYPE['bodyParams']
-export type RESULT<APITYPE extends API<Method, any, any, any, any, string>> = APITYPE['result']
+
+export type PATH_PARAMS<APITYPE extends API> = APITYPE['pathParams']
+export type QUERY_PARAMS<APITYPE extends API> = APITYPE['queryParams']
+// export type DiffTypes<T, U> = T extends U ? never : T;
+export type PATH_AND_QUERY_PARAMS<APITYPE extends API> = PATH_PARAMS<APITYPE> & QUERY_PARAMS<APITYPE>;
+//  DiffTypes<PATH_PARAMS<APITYPE> & QUERY_PARAMS<APITYPE>, undefined>;
+export type BODY_PARAMS<APITYPE extends API> = APITYPE['bodyParams'];
+export type RESULT<APITYPE extends API> = APITYPE['result']
 
 const methodAndPathPairsAlreadySpecified = new Map<string, string>()
 

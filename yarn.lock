@@ -5089,13 +5089,9 @@ resolve@^1.1.6, resolve@^1.3.2:
   dependencies:
     path-parse "^1.0.5"
 
-rest-contracts@0.9.12:
-  version "0.9.12"
-  resolved "https://registry.yarnpkg.com/rest-contracts/-/rest-contracts-0.9.12.tgz#82a195f693ae0e601f7721860dfe4a193ee6f640"
-
-rest-contracts@0.9.9:
-  version "0.9.9"
-  resolved "https://registry.yarnpkg.com/rest-contracts/-/rest-contracts-0.9.9.tgz#37bd0e418ec9280704b7357640cf158fb8c5d72b"
+rest-contracts@^0.9.20:
+  version "0.9.20"
+  resolved "https://registry.yarnpkg.com/rest-contracts/-/rest-contracts-0.9.20.tgz#216cfcb2a1f315d7a96b291e3e67d87c97ca80cf"
 
 restore-cursor@^1.0.1:
   version "1.0.1"

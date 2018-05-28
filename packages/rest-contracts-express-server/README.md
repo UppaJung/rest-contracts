@@ -1,40 +1,40 @@
 # REST-Contracts
-## A Set of Simple TypeScript Libraries for Defining REST APIs
+## Minimalist TypeScript Libraries for Defining & Implementing REST APIs
 
 The REST-Contracts set of packages were designed for web services that run TypeScript on both their back-end (API server/provider) and front-end (API client/consumer), and want a light-weight way to:
  * specify the inputs and outputs of each API call
  * automatically generate typed API client functions
-   - each function's parameters are typed so that TypeScript can enforce the contract
-   - each function returns a Promise for the result type specified in the contract
+   - with types for each function's parameters so that TypeScript can enforce the contract
+   - with each function returning a Promise for the result type specified in the contract
  * use TypeScript to simplify implementing the API service while reducing errors
-   - parameters arrive to your code with the typeps specified in the contract
+   - parameters arrive to your code with the types specified in the contract
    - the type checker verifies that your implementation returns the type specified in the contract
 
 ### REST-contracts uses auto-complete to help make writing APIs easy.
 
 First, you can use auto-complete to pick an HTTP REST method.
 
-![Intellisense shows you the Method options avaialble](images/method-choice.png?raw=true)
+![Intellisense shows you the Method options avaialble](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/method-choice.png?raw=true)
 
 Then, you choose whether your method will have path paramters.
 
-![Intellisense gives you the option to specify path parameters, or no path parameters](images/get-path-parameters.png?raw=true)
+![Intellisense gives you the option to specify path parameters, or no path parameters](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-path-parameters.png?raw=true)
 
 Next, you specify query parameters (get & delete method) or body parameters (put, post, & patch).
 
-![Intellisense gives you the option to specify query/body parameters, or none](images/get-query-parameters.png?raw=true)
+![Intellisense gives you the option to specify query/body parameters, or none](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-query-parameters.png?raw=true)
 
 You then specify a result, or choose to return no result.
 
-![Intellisense gives you the option to specify a result or return no result (void)](images/get-returns.png?raw=true)
+![Intellisense gives you the option to specify a result or return no result (void)](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-returns.png?raw=true)
 
 Finally, you choose the specify the path.  Any path parameters should appear between slashes and be preceded by a colon (":").
 
-![Intellisense indicates where to specify the path.](images/get-path.png?raw=true)
+![Intellisense indicates where to specify the path.](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-path.png?raw=true)
 
 The result is a complete contract.
 
-![A complete contract for a REST GET API.](images/get-complete.png?raw=true)
+![A complete contract for a REST GET API.](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-complete.png?raw=true)
 
 A full contract for a data type (e.g. an Excuse object) might look something like this, with a GET request for individaul objects, a GET request for multiple objects, and a PUT request to add items.
 
@@ -80,7 +80,7 @@ The Get, Query, and Put objects generated in this example contain a path and met
 
 ### REST-contracts server packages simplify correct API implementation.
 
-To create servers implement the API in these contracts, you can currently used rest-contracts-express-server, or implement your own.  (A module for AWS lambda is forthcoming.)
+To create servers implement the API in these contracts, you can currently used rest-contracts-express-server, rest-contracts-lambda, or implement your own.
 
 ```ts
 // server.ts
@@ -167,7 +167,7 @@ export async function run(): Promise<void> {
     await excuseClient.put({
       id: "df458df",
       quality: ExcuseContract.ExcuseQuality.Poor,
-      description: "I don't use TypeScript I enjoy debugging type errors in production software.",
+      description: "I don't use TypeScript because I enjoy debugging type errors in production software.",
     });
 
     console.log("Put the first excuse");
