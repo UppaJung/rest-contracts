@@ -90,11 +90,11 @@ export class RestContractsExpressServer {
   public implement<API extends RestContracts.QueryParameterAPI>(
     api: API,
     handler: TypedExpressHandlerDeleteGet<API>
-  ): TypedExpressHandler<API>;
+  ): TypedExpressHandlerDeleteGet<API>;
   public implement<API extends RestContracts.BodyParameterAPI>(
     api: API,
     handler: TypedExpressHandlerPatchPostPut<API>
-  ): TypedExpressHandler<API>;
+  ): TypedExpressHandlerPatchPostPut<API>;
   public implement<API extends RestContracts.API>(
     api: API,
     handler: TypedExpressHandler<typeof api>
