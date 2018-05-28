@@ -1,6 +1,6 @@
 {
   "name": "rest-contracts-express-server",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Provides a TypeScript class for implementing REST APIs specified via rest-contracts with express.",
   "main": "lib/index.js",
   "module": "lib-esm/index.js",
