@@ -30,7 +30,7 @@ export function run(): void {
   // to you. (We've also added typings to the parameter fields of the req object!)
 
   // Implement the Excuse Put method
-  ourApi.implement(ExcuseContract.Put, (params, body, req, res, next) => {
+  ourApi.implement(ExcuseContract.Put, (body, params, req, res, next) => {
     const excuseWithOptionalId = req.body;
     const excuse: ExcuseContract.Excuse = excuseWithOptionalId.id ?
       excuseWithOptionalId as ExcuseContract.Excuse :

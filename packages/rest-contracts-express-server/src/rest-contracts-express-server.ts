@@ -30,8 +30,8 @@ export type TypedExpressHandlerDeleteGet<
 export type TypedExpressHandlerPatchPostPut<
   API extends RestContracts.BodyParameterAPI
 > = (
-    pathAndQueryParams: RestContracts.PATH_AND_QUERY_PARAMS<API>,
     body: RestContracts.BODY_PARAMS<API>,
+    pathAndQueryParams: RestContracts.PATH_AND_QUERY_PARAMS<API>,
     req: TypedExpressRequest<API>,
     res: express.Response,
     next: express.NextFunction,
@@ -88,12 +88,12 @@ export class RestContractsExpressServer {
    */
   public implement<API extends RestContracts.QueryParameterAPI>(
     api: API,
-    handler: TypedExpressHandler<typeof api>
-  ): TypedExpressHandler<typeof api>;
+    handler: TypedExpressHandlerDeleteGet<API>
+  ): TypedExpressHandler<API>;
   public implement<API extends RestContracts.BodyParameterAPI>(
     api: API,
-    handler: TypedExpressHandler<typeof api>
-  ): TypedExpressHandler<typeof api>;
+    handler: TypedExpressHandlerPatchPostPut<API>
+  ): TypedExpressHandler<API>;
   public implement<API extends RestContracts.API>(
     api: API,
     handler: TypedExpressHandler<typeof api>
@@ -151,15 +151,15 @@ function wrap<
       let result: RestContracts.RESULT<API> | undefined;
       if (RestContracts.isQueryParameterAPI(api)) {
         result = await (handler as TypedExpressHandlerDeleteGet<typeof api>)(
-            Object.assign({}, req.query || {}, req.params || {}),
-            req as TypedExpressRequest<typeof api>,
-            res,
-            next
-          );
+          Object.assign({}, req.query || {}, req.params || {}),
+          req as TypedExpressRequest<typeof api>,
+          res,
+          next
+        );
       } else if (RestContracts.isBodyParameterAPI(api)) {
         result = await (handler as TypedExpressHandlerPatchPostPut<typeof api>)(
-          Object.assign({}, req.query || {}, req.params || {}),
-          req.body,
+          req.body as RestContracts.BODY_PARAMS<typeof api>,
+          Object.assign({}, req.query || {}, req.params || {}) as RestContracts.PATH_AND_QUERY_PARAMS<typeof api>,
           req as TypedExpressRequest<typeof api>,
           res,
           next

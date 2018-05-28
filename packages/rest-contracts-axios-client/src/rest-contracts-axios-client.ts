@@ -1,5 +1,5 @@
 import Axios, { AxiosPromise, AxiosRequestConfig } from "axios";
-import * as RestContracts from "../../rest-contracts/src/rest-contracts";
+import * as RestContracts from "rest-contracts";
 
 export type RequestOptions = AxiosRequestConfig;
 
