@@ -1,5 +1,6 @@
 import * as RestContracts from "rest-contracts";
 import {getClientCreationFunction} from "rest-contracts-axios-client";
+import {ExcuseId, Excuse, ExcuseQuality} from "./excuse-contract";
 import * as ExcuseContract from "./excuse-contract";
 
 // To create client calls, the factory needs the URL and any default configuration settings
@@ -21,24 +22,22 @@ export async function run(): Promise<void> {
 
   try {
     // Add two excuses.  Excuses for what?  Not using TypeScript.
-    await excuseClient.put({
-      id: "df458df",
-      quality: ExcuseContract.ExcuseQuality.Poor,
+    const firstExcuseStored = await excuseClient.put({
+      quality: ExcuseQuality.Poor,
       description: "I don't use TypeScript I enjoy debugging type errors in production software.",
     });
 
-    console.log("Put the first excuse");
+    console.log("Put the first excuse", firstExcuseStored);
 
-    await excuseClient.put({
-      id: "asdflewi",
-      quality: ExcuseContract.ExcuseQuality.Poor,
+    const secondExcuseStored = await excuseClient.put({
+      quality: ExcuseQuality.Poor,
       description: "My nervous systems has a built-in type checker that catches errors before they become keystrokes.",
     });
 
-    console.log("Put the second excuse");
+    console.log("Put the second excuse", secondExcuseStored);
 
-    // Retrieve the second excuse using get with a path parameter.
-    const secondExcuse = await excuseClient.get({id: "asdflewi"});
+    // Retrieve the second excuse again using get with a path parameter.
+    const secondExcuse = await excuseClient.get({id: secondExcuseStored.id});
 
     // Retrieve excuses using Query (get with a query parameter)
     const lameExcuses = await excuseClient.query({quality: ExcuseContract.ExcuseQuality.Poor});

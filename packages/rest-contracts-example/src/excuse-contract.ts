@@ -6,15 +6,33 @@ export enum ExcuseQuality {
   Poor = "lame"
 }
 
+const sequentialIdCounters: {[key in string]: number} = {};
+const sequentialIdGenerator = <T extends string>(prefix: string) =>
+  (): T => {
+    sequentialIdCounters[prefix] = (sequentialIdCounters[prefix] | 0) + 1;
+    return (prefix + (sequentialIdCounters[prefix]) ) as T;
+  }
+
+enum MayOnlyBeAnExcuseId {};
+export type ExcuseId = MayOnlyBeAnExcuseId & string;
+export const ExcuseId = sequentialIdGenerator<ExcuseId>("ExcuseId:");
+
 export interface Excuse {
-  id: string;
+  id: ExcuseId;
   quality: ExcuseQuality;
   description: string;
 }
 
+type Diff<T, U> = T extends U ? never : T;
+type MakeAttributeOptional<T, ATTRIBUTE extends keyof T> = {
+  [P in Diff<keyof T, ATTRIBUTE>]: T[P];
+} & {
+  [P in ATTRIBUTE]?: T[ATTRIBUTE];
+};
+
 export const Get =
   RestContracts.CreateAPI.Get
-  .PathParameters<{ id: string }>()
+  .PathParameters<{ id: ExcuseId }>()
   .NoQueryParameters
   .Returns<Excuse>()
   .Path('/excuses/:id/');
@@ -29,6 +47,6 @@ export const Query =
 export const Put =
   RestContracts.CreateAPI.Put
   .NoPathParameters
-  .BodyParameters<Excuse>()
+  .BodyParameters<MakeAttributeOptional<Excuse, "id">>()
   .Returns<Excuse>()
   .Path("/excuses/");

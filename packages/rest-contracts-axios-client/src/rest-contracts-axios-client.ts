@@ -1,5 +1,5 @@
 import Axios, { AxiosPromise, AxiosRequestConfig } from "axios";
-import * as RestContracts from "rest-contracts";
+import * as RestContracts from "../../rest-contracts/src/rest-contracts";
 
 export type RequestOptions = AxiosRequestConfig;
 
@@ -67,7 +67,7 @@ type RequestFactory = {
   <API extends RestContracts.BodyParameterAPI<RestContracts.Method.patch | RestContracts.Method.post | RestContracts.Method.put, undefined, any, any, string>>(
     api: API
   ): (bodyParams: RestContracts.BODY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
-  <API extends RestContracts.API<RestContracts.Method, any, undefined, undefined, any, string>>(
+  <API extends RestContracts.QueryParameterAPI<RestContracts.Method.get | RestContracts.Method.delete, any, undefined, any, string>>(
     api: API
   ): (pathParams: RestContracts.PATH_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
   <API extends RestContracts.QueryParameterAPI<RestContracts.Method.get | RestContracts.Method.delete, any, any, any, string>>(
@@ -90,7 +90,7 @@ export function requestFactory<API extends RestContracts.QueryParameterAPI<RestC
 export function requestFactory<API extends RestContracts.BodyParameterAPI<RestContracts.Method.patch | RestContracts.Method.post | RestContracts.Method.put, undefined, any, any, string>>(baseUrl: string, options: RequestOptions, api: API):
  (bodyParams: RestContracts.BODY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
 //   Path only
-export function requestFactory<API extends RestContracts.API<RestContracts.Method, any, undefined, undefined, any, string>>(baseUrl: string, options: RequestOptions, api: API):
+export function requestFactory<API extends RestContracts.QueryParameterAPI<RestContracts.Method.get | RestContracts.Method.delete, any, undefined, any, string>>(baseUrl: string, options: RequestOptions, api: API):
  (pathParams: RestContracts.PATH_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
 
 // For path and query/body
@@ -98,10 +98,10 @@ export function requestFactory<API extends RestContracts.API<RestContracts.Metho
 export function requestFactory<API extends RestContracts.QueryParameterAPI<RestContracts.Method.get | RestContracts.Method.delete, any, any, any, string>>(baseUrl: string, options: RequestOptions, api: API):
   (pathAndQueryParameters: RestContracts.PATH_PARAMS<API> & RestContracts.QUERY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
 //   Body
-export function requestFactory<API extends RestContracts.BodyParameterAPI<RestContracts.Method.patch | RestContracts.Method.post | RestContracts.Method.put, any, any, any, string>>(baseUrl: string, options: RequestOptions, api: API):
+export function requestFactory<API extends RestContracts.BodyParameterAPI<any, any, any, any, string>>(baseUrl: string, options: RequestOptions, api: API):
   (pathParams: RestContracts.PATH_PARAMS<API>, bodyParams: RestContracts.BODY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
 
-export function requestFactory<API extends RestContracts.API<RestContracts.Method, any, any, any, any, string>>(
+export function requestFactory<API extends RestContracts.API>(
   baseUrl: string,
   defaultOptions: RequestOptions,
   api: API
@@ -208,7 +208,7 @@ export const getClientCreationFunction = (
   baseUrl: string = "",
   defaultOptions: RequestOptions = {}
 ) =>
-  ( (api: RestContracts.API, options: RequestOptions = {}) => requestFactory(
+  ( <API extends RestContracts.API>(api: API, options: RequestOptions = {}) => requestFactory(
     baseUrl,
     {...defaultOptions, ...options},
     api
