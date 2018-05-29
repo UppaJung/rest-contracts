@@ -18,9 +18,12 @@ export type ExcuseId = MayOnlyBeAnExcuseId & string;
 export const ExcuseId = sequentialIdGenerator<ExcuseId>("ExcuseId:");
 
 export interface Excuse {
-  id: ExcuseId;
   quality: ExcuseQuality;
   description: string;
+}
+
+export interface ExcuseDbRecord extends Excuse {
+  id: ExcuseId;
 }
 
 type Diff<T, U> = T extends U ? never : T;
@@ -34,19 +37,19 @@ export const Get =
   RestContracts.CreateAPI.Get
   .PathParameters<{ id: ExcuseId }>()
   .NoQueryParameters
-  .Returns<Excuse>()
+  .Returns<ExcuseDbRecord>()
   .Path('/excuses/:id/');
 
 export const Query =
   RestContracts.CreateAPI.Get
   .NoPathParameters
-  .QueryParameters<{quality?: Excuse["quality"]}>()
-  .Returns<Excuse[]>()
+  .QueryParameters<{quality?: ExcuseDbRecord["quality"]}>()
+  .Returns<ExcuseDbRecord[]>()
   .Path('/excuses/');
 
 export const Put =
   RestContracts.CreateAPI.Put
   .NoPathParameters
-  .BodyParameters<MakeAttributeOptional<Excuse, "id">>()
-  .Returns<Excuse>()
+  .BodyParameters<Excuse | ExcuseDbRecord>()
+  .Returns<ExcuseDbRecord>()
   .Path("/excuses/");
