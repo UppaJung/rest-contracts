@@ -1,7 +1,7 @@
 import * as bodyParser from "body-parser";
 import * as express from "express";
-import * as RestContracts from "rest-contracts";
-import * as RestContractsExpressServer from "rest-contracts-express-server";
+import * as RestContracts from "/rest-contracts";
+import * as RestContractsExpressServer from "../../rest-contracts-express-server/src/rest-contracts-express-server";
 import * as ExcuseContract from "./excuse-contract";
 
 // If you're using express, you'll still have to configure it,
@@ -49,6 +49,11 @@ export function run(): void {
 
   // Implement the Excuse Get method
   // (leaving out req, res, next since we're not using them)
+
+
+
+
+
   ourApi.implement(ExcuseContract.Get, (params) =>
     excuseMemoryDatabaseTable.get(params.id)
   );

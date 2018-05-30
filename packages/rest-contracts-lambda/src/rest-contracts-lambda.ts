@@ -1,19 +1,30 @@
 import * as Lambda from "aws-lambda";
-import * as RestContracts from "rest-contracts";
+import * as RestContracts from "/rest-contracts";
 
-export interface APIGatewayProxyEvent<API extends RestContracts.API> extends Lambda.APIGatewayProxyEvent {
-  pathParameters: RestContracts.PATH_PARAMS<API> | null;
-  queryStringParameters: RestContracts.QUERY_PARAMS<API> | null;
+export interface APIGatewayProxyEvent<API extends RestContracts.UsesMethod & RestContracts.AtPath> extends Lambda.APIGatewayProxyEvent {
+  pathParameters: RestContracts.PATH_PARAMS_OR_NULL<API>;
+  queryStringParameters: RestContracts.QUERY_PARAMS_OR_NULL<API>;
 }
 
-export interface AugmentedAPIGatewayProxyEvent<API extends RestContracts.API> extends APIGatewayProxyEvent<API> {
-  params: API extends RestContracts.PostAPI<any, any, any, any>  ?
-    RestContracts.QUERY_PARAMS<API> & RestContracts.PATH_PARAMS<API> & RestContracts.BODY_PARAMS<API> :
-    RestContracts.QUERY_PARAMS<API> & RestContracts.PATH_PARAMS<API>,
-  bodyObject: API extends RestContracts.GetAPI<any, any, any, any> | RestContracts.DeleteAPI<any,any,any,any> ?
-    never :
-    RestContracts.BODY_PARAMS<API> | undefined
-}
+export interface AugmentedAPIGatewayProxyEventForBodyMethod<
+  API extends RestContracts.UsesMethodSupportingBodyParameter & RestContracts.AtPath
+> extends APIGatewayProxyEvent<API> {
+  params: RestContracts.PATH_PARAMS<API>
+  bodyObject: RestContracts.BODY_PARAMS<API>
+};
+export interface AugmentedAPIGatewayProxyEventForQueryMethod<
+  API extends RestContracts.UsesMethodSupportingQueryParameter & RestContracts.AtPath
+> extends APIGatewayProxyEvent<API> {
+  params: RestContracts.PATH_AND_QUERY_PARAMS<API>
+};
+
+export type AugmentedAPIGatewayProxyEvent<
+  API extends RestContracts.UsesMethod & RestContracts.AtPath
+> = API extends RestContracts.UsesMethodSupportingBodyParameter ?
+    AugmentedAPIGatewayProxyEventForBodyMethod<API> :
+  API extends RestContracts.UsesMethodSupportingQueryParameter ?
+    AugmentedAPIGatewayProxyEventForQueryMethod<API> :
+  never;
 
 export enum ResultEncoding {
   JSON = "JSON",
@@ -76,7 +87,7 @@ const defaultErrorHandler = (err: any, callback: Lambda.APIGatewayProxyCallback)
  *        of the body contents than the query, and more likely to have control over
  *        the query parameters than the path parameters.)
  */
-export const wrapLambdaParameters = <API extends RestContracts.API>(
+export const wrapLambdaParameters = <API extends RestContracts.UsesMethod & RestContracts.AtPath>(
   api: API,
   handler: (
     event: AugmentedAPIGatewayProxyEvent<API>,
@@ -88,39 +99,43 @@ export const wrapLambdaParameters = <API extends RestContracts.API>(
   context: Lambda.Context,
   callback: Lambda.APIGatewayProxyCallback
 ) => {
-  const optionalBodyObject = {} as {bodyObject?: RestContracts.BODY_PARAMS<API>};
-  if ( (api.method === RestContracts.Method.post ||
-        api.method === RestContracts.Method.patch ||
-        api.method === RestContracts.Method.put) &&
+  let optionalBodyObject = {} as {bodyObject: RestContracts.BODY_PARAMS<API>} | {};
+  if ( RestContracts.isBodyParameterAPI(api) &&
        typeof(event.body) === "string" &&
        event.body.length > 0) {
     try {
-      optionalBodyObject.bodyObject = JSON.parse(event.body);
+      optionalBodyObject = JSON.parse(event.body) as {bodyObject: RestContracts.BODY_PARAMS<API>};
     } catch (err) {
       // Ignore parse errors and just return undefined for the body object
     }
   }
-  // Combine body parameters (if an object), query parameters, and path parameters
-  // into a single
-  const params = {
-    // Hack since TypeScript 2.8.3 doesn't consider (cond ? object : object) to be a spreadable object
-    ...( (api.method === RestContracts.Method.post && optionalBodyObject ? optionalBodyObject : {}) as object),
-    ...(event.queryStringParameters || {}),
-    ...(event.pathParameters || {}),
-  } as API extends RestContracts.PostAPI<any, any, any, any>  ?
-    RestContracts.QUERY_PARAMS<API> & RestContracts.PATH_PARAMS<API> & RestContracts.BODY_PARAMS<API> :
-    RestContracts.QUERY_PARAMS<API> & RestContracts.PATH_PARAMS<API>;
 
-  const augmentedEvent = {
-    ...event,
-    // Hack since TypeScript 2.8.3 doesn't consider (cond ? object : object) to be a spreadable object
-    ...( optionalBodyObject as object),
-    params
-  } as AugmentedAPIGatewayProxyEvent<API>;
+  if (RestContracts.isQueryParameterAPI(api)) {
+    const augmentedEvent = {
+      ...event,
+      ...optionalBodyObject,
+      params: {
+        ...(event.queryStringParameters || {}),
+        ...(event.pathParameters || {}),
+      } as RestContracts.PATH_AND_QUERY_PARAMS<API>
+    } as AugmentedAPIGatewayProxyEventForQueryMethod<typeof api>;
+    handler( augmentedEvent as AugmentedAPIGatewayProxyEvent<API>, context, callback );
 
-  handler( augmentedEvent, context, callback );
+    return;
 
-  return;
+  } else if (RestContracts.isBodyParameterAPI(api)) {
+    const augmentedEvent = {
+      ...event,
+      ...optionalBodyObject,
+      params: event.pathParameters || {}
+    } as AugmentedAPIGatewayProxyEventForBodyMethod<typeof api>;
+
+    handler( augmentedEvent as AugmentedAPIGatewayProxyEvent<API>, context, callback );
+
+    return;
+  } else {
+    throw new Error("Invalid method");
+  }
 };
 
 /**
@@ -176,7 +191,9 @@ export const wrapLambdaParameters = <API extends RestContracts.API>(
  *
  *
  */
-export const wrapLambdaParametersAndResult = <API extends RestContracts.API>(
+export const wrapLambdaParametersAndResult = <
+  API extends RestContracts.UsesMethod & RestContracts.AtPath & (RestContracts.Returns | {})
+  >(
   api: API,
   handler: (
     event: AugmentedAPIGatewayProxyEvent<API>,
@@ -240,13 +257,13 @@ export const wrapLambdaParametersAndResult = <API extends RestContracts.API>(
 
       // Encode the body object as specified by the ResultEncoding option (JSON is default)
       const bodyObject = (
-          (typeof(handlersResult as any) === "string") &&
+          (typeof(handlersResult) === "string") &&
           (resultEncoding === ResultEncoding.RawString)
         ) ? {
           body: handlersResult as string
         } : (
-          resultEncoding === ResultEncoding.BinaryToBeBase64Encoded &&
-          typeof(handlersResult) === "object" &&
+          (resultEncoding === ResultEncoding.BinaryToBeBase64Encoded) &&
+          (typeof(handlersResult) === "object") &&
           ((handlersResult as object) instanceof Buffer)
         ) ? {
           body: handlersResult.toString('base64'),

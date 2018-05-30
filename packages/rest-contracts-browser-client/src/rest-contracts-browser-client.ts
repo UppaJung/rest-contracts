@@ -3,7 +3,7 @@ import * as RestContracts from "rest-contracts";
 function assemblePath(
   pathComponentArrayReadOnly: string[],
   parameterToIndexMap: Map<string, number>,
-  pathParameters: {[attribute: string]: string | number},
+  pathParameters: RestContracts.PathParametersType & RestContracts.QueryParametersType | {} = {},
 ): {
   pathWithParameters: string,
   remainingParameters: {[attribute: string]: any}
@@ -25,9 +25,7 @@ function assemblePath(
       if (value) {
         return (typeof (value) === "string") ?
           encodeURIComponent(value) :
-          (typeof (value as (number | undefined)) === "number") ?
-            value.toString() :
-            undefined;
+          undefined;
       }
 
       return null;
@@ -240,91 +238,89 @@ function request<T>(params: RequestOptions & {
   });
 }
 
-type RequestFactory = {
-  <API extends RestContracts.QueryParameterAPI<RestContracts.Method.get | RestContracts.Method.delete, undefined, undefined, any, string>>(
-    api: API
-  ): (options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
-  <API extends RestContracts.QueryParameterAPI<RestContracts.Method.get | RestContracts.Method.delete, undefined, any, any, string>>(
-    api: API
-  ): (queryParams: RestContracts.QUERY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
-  <API extends RestContracts.BodyParameterAPI<RestContracts.Method.patch | RestContracts.Method.post | RestContracts.Method.put, undefined, any, any, string>>(
-    api: API
-  ): (bodyParams: RestContracts.BODY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
-  <API extends RestContracts.QueryParameterAPI<RestContracts.Method.get | RestContracts.Method.delete, any, undefined, any, string>>(
-    api: API
-  ): (pathParams: RestContracts.PATH_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
-  <API extends RestContracts.QueryParameterAPI<RestContracts.Method.get | RestContracts.Method.delete, any, any, any, string>>(
-    api: API
-  ): (pathAndQueryParameters: RestContracts.PATH_PARAMS<API> & RestContracts.QUERY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
-  <API extends RestContracts.BodyParameterAPI<RestContracts.Method.patch | RestContracts.Method.post | RestContracts.Method.put, any, any, any, string>>(
-    api: API
-  ): (pathParams: RestContracts.PATH_PARAMS<API>, bodyParams: RestContracts.BODY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
-}
+type RequestHandler<API extends RestContracts.AtPath & RestContracts.UsesMethod> =
+  API extends RestContracts.UsesMethodSupportingBodyParameter ? (
+    API extends RestContracts.PathParameters ? (
+      (pathParams: RestContracts.PATH_PARAMS<API>, bodyParams: RestContracts.BODY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
+    ) : (
+      (bodyParams: RestContracts.BODY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
+    )
+  )
+  :
+  API extends RestContracts.UsesMethodSupportingQueryParameter ? (
+    API extends RestContracts.PathParameters & RestContracts.QueryParameters ? (
+      (pathAndQueryParameters: RestContracts.PATH_PARAMS<API> & RestContracts.QUERY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
+    ) :
+    API extends RestContracts.PathParameters ? (
+        (pathAndQueryParameters: RestContracts.PATH_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
+    ) :
+    API extends RestContracts.QueryParameters ? (
+        (pathAndQueryParameters: RestContracts.QUERY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
+    ) : (
+      (options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
+    )
+  )
+  : never;
 
-// No query, no path
-export function requestFactory<API extends RestContracts.QueryParameterAPI<RestContracts.Method.get | RestContracts.Method.delete, undefined, undefined, any, string>>(baseUrl: string, options: RequestOptions, api: API):
- (options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
-
-// For only one of three parameter types
-//   Query only
-export function requestFactory<API extends RestContracts.QueryParameterAPI<RestContracts.Method.get | RestContracts.Method.delete, undefined, any, any, string>>(baseUrl: string, options: RequestOptions, api: API):
- (queryParams: RestContracts.QUERY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
-//   Body only
-export function requestFactory<API extends RestContracts.BodyParameterAPI<RestContracts.Method.patch | RestContracts.Method.post | RestContracts.Method.put, undefined, any, any, string>>(baseUrl: string, options: RequestOptions, api: API):
- (bodyParams: RestContracts.BODY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
-//   Path only
-export function requestFactory<API extends RestContracts.QueryParameterAPI<any, any, undefined, any, string>>(baseUrl: string, options: RequestOptions, api: API):
- (pathParams: RestContracts.PATH_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
-
-// For path and query/body
-//   Query
-export function requestFactory<API extends RestContracts.QueryParameterAPI<RestContracts.Method.get | RestContracts.Method.delete, any, any, any, string>>(baseUrl: string, options: RequestOptions, api: API):
-  (pathAndQueryParameters: RestContracts.PATH_PARAMS<API> & RestContracts.QUERY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
-//   Body
-export function requestFactory<API extends RestContracts.BodyParameterAPI<RestContracts.Method.patch | RestContracts.Method.post | RestContracts.Method.put, any, any, any, string>>(baseUrl: string, options: RequestOptions, api: API):
-  (pathParams: RestContracts.PATH_PARAMS<API>, bodyParams: RestContracts.BODY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>;
-
-export function requestFactory<API extends RestContracts.API>(
-  baseUrl: string,
-  defaultOptions: RequestOptions,
+type RequestFactory = <
+  API extends RestContracts.AtPath & RestContracts.UsesMethod
+>(
   api: API
-) {
-  // Remove any trailing slashes from the base URL since the path will start with a slash
-  baseUrl = baseUrl.replace(/\/+$/, "")
-  const {method} = api;
-  const pathWithStartingSlash = (
-    (baseUrl.length > 0 && baseUrl.charAt(baseUrl.length - 1) !== "/" && api.path.length > 0 && api.path.charAt(0) !== "/") ?
-      "/" :
-      ""
-    ) + api.path;
-  const pathWithoutStartingSlash = pathWithStartingSlash.substr(1);
-  const pathElements = pathWithoutStartingSlash.split("/");
-  const parameterToIndex = new Map<string, number>(
-    pathElements
-      // Pull out an [index, parameterName] pair for every path element that starts with ":"
-      .map( (pathComponent, index) =>
-        // Parameters must start after the first slash (/), begin with a ":",
-        // and contain characters after the ":"
-        (index > 0 && pathComponent.length > 1 && pathComponent.startsWith(":")) ?
-          [pathComponent.replace(/[:?]/g, ""), index] as [string, number] :
-          // return undefined if this isn't a path paramter so the filter (below) can remove
-          // non-parameter elements from the list of parameters fed into the map constructor
-          undefined
-      )
-      // Remove all undefineds created at positions where there was not a path parameter
-      // so that the map constructor only receives parameters.
-      .filter ( pathParameter => typeof(pathParameter) !== "undefined" ) as [string, number][]
-  );
-  const hasPathParameters = parameterToIndex.size > 0;
+) => RequestHandler<API>;
 
 
-  switch (method) {
-    case RestContracts.Method.get:
-    case RestContracts.Method.delete: {
+/**
+ * Create a factory that will generated a promise-based client functions
+ * to call the corresponding API function on the server.
+ *
+ * @param baseUrl The URL of the API server
+ * @param defaultOptions Use to set default options for all API calls
+ *   generated by this factory, which can be overriden during individual
+ *   calls.  Options are timeoutInMs (default 0 indicating no timeout),
+ *   headers (none), noCache (false), and withCredentials (true).
+ */
+export const getClientCreationFunction = (
+  defaultBaseUrl = "",
+  factoryDefaultOptions: RequestOptions = {}
+) => <API extends RestContracts.AtPath & RestContracts.UsesMethod>(
+    api: API,
+    baseUrl: string = defaultBaseUrl,
+    apiDefaultOptions: RequestOptions = {},
+  ) => {
+    const defaultOptions: RequestOptions = {...factoryDefaultOptions, ...apiDefaultOptions};
+    // Remove any trailing slashes from the base URL since the path will start with a slash
+    baseUrl = baseUrl.replace(/\/+$/, "")
+    const {method} = api;
+    const pathWithStartingSlash = (
+      (baseUrl.length > 0 && baseUrl.charAt(baseUrl.length - 1) !== "/" && api.path.length > 0 && api.path.charAt(0) !== "/") ?
+        "/" :
+        ""
+      ) + api.path;
+    const pathWithoutStartingSlash = pathWithStartingSlash.substr(1);
+    const pathElements = pathWithoutStartingSlash.split("/");
+    const parameterToIndex = new Map<string, number>(
+      pathElements
+        // Pull out an [index, parameterName] pair for every path element that starts with ":"
+        .map( (pathComponent, index) =>
+          // Parameters must start after the first slash (/), begin with a ":",
+          // and contain characters after the ":"
+          (index > 0 && pathComponent.length > 1 && pathComponent.startsWith(":")) ?
+            [pathComponent.replace(/[:?]/g, ""), index] as [string, number] :
+            // return undefined if this isn't a path paramter so the filter (below) can remove
+            // non-parameter elements from the list of parameters fed into the map constructor
+            undefined
+        )
+        // Remove all undefineds created at positions where there was not a path parameter
+        // so that the map constructor only receives parameters.
+        .filter ( pathParameter => typeof(pathParameter) !== "undefined" ) as [string, number][]
+    );
+    const hasPathParameters = parameterToIndex.size > 0;
+
+    if (RestContracts.isQueryParameterAPI) {
       if (hasPathParameters) {
         // Return a function with path parameters and query parameters specified together as one parameter
         return (
-          parameters: RestContracts.PATH_PARAMS<API> & RestContracts.QUERY_PARAMS<API>,
+          parameters: RestContracts.PATH_AND_QUERY_PARAMS<API>,
           options: RequestOptions = {}
         ) => {
           const {pathWithParameters, remainingParameters} = assemblePath(pathElements, parameterToIndex, parameters);
@@ -350,10 +346,7 @@ export function requestFactory<API extends RestContracts.API>(
           })
         };
       }
-    }
-    case RestContracts.Method.post:
-    case RestContracts.Method.put:
-    case RestContracts.Method.patch: {
+    } else if (RestContracts.isBodyParameterAPI(api)) {
       if (hasPathParameters) {
         // Return a function with path parameters followed by body parameters
         return (
@@ -387,27 +380,5 @@ export function requestFactory<API extends RestContracts.API>(
         };
       }
     }
+    throw new Error("Illegal method");
   }
-
-  return undefined;
-}
-
-/**
- * Create a factory that will generated a promise-based client functions
- * to call the corresponding API function on the server.
- *
- * @param baseUrl The URL of the API server
- * @param defaultOptions Use to set default options for all API calls
- *   generated by this factory, which can be overriden during individual
- *   calls.  Options are timeoutInMs (default 0 indicating no timeout),
- *   headers (none), noCache (false), and withCredentials (true).
- */
-export const getClientCreationFunction = (
-  baseUrl: string,
-  defaultOptions: RequestOptions = {}
-) =>
-  ( (api: RestContracts.API, options: RequestOptions = {}) => requestFactory(
-    baseUrl,
-    {...defaultOptions, ...options},
-    api
-  ) ) as RequestFactory;
