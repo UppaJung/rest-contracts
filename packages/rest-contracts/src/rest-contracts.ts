@@ -207,7 +207,7 @@ const constructPath = <SO_FAR extends UsesMethod>(soFar: SO_FAR) => ({
 export const API = {
   Get: constructPath({method: Method.get} as GET),
   Delete: constructPath({method: Method.delete} as DELETE),
-  Put: constructPath({method: Method.patch} as PATCH),
+  Patch: constructPath({method: Method.patch} as PATCH),
   Post: constructPath({method: Method.post} as POST),
-  Patch: constructPath({method: Method.put} as PUT),
+  Put: constructPath({method: Method.put} as PUT),
 }
