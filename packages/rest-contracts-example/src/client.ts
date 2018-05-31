@@ -5,7 +5,7 @@ import * as ExcuseContract from "./excuse-contract";
 
 // To create client calls, the factory needs the URL and any default configuration settings
 // we might want to specify.
-const createRequestFunction = getClientCreationFunction  ("http://localhost:5000/", {timeout: 5000});
+const createRequestFunction = getClientCreationFunction("http://localhost:5000/", {timeout: 5000});
 
 // Call the factory to create a request functio nfor Get, Query, and Put
 const excuseClient = {
@@ -35,6 +35,10 @@ export async function run(): Promise<void> {
     });
 
     console.log("Put the second excuse", secondExcuseStored);
+    const excuseId = firstExcuseStored.id;
+
+    // Retrieve the first excuse again using get with a path parameter.
+    const excuse = await excuseClient.get({id: excuseId});
 
     // Retrieve the second excuse again using get with a path parameter.
     const secondExcuse = await excuseClient.get({id: secondExcuseStored.id});

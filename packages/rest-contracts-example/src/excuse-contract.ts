@@ -1,10 +1,4 @@
-import * as RestContracts from "rest-contracts";
-
-export enum ExcuseQuality {
-  Good = "solid",
-  Mediocre = "iffy",
-  Poor = "lame"
-}
+import {API} from "rest-contracts";
 
 const sequentialIdCounters: {[key in string]: number} = {};
 const sequentialIdGenerator = <T extends string>(prefix: string) =>
@@ -13,43 +7,39 @@ const sequentialIdGenerator = <T extends string>(prefix: string) =>
     return (prefix + (sequentialIdCounters[prefix]) ) as T;
   }
 
-enum MayOnlyBeAnExcuseId {};
-export type ExcuseId = MayOnlyBeAnExcuseId & string;
-export const ExcuseId = sequentialIdGenerator<ExcuseId>("ExcuseId:");
+export enum ExcuseQuality {
+  Good = "solid",
+  Mediocre = "iffy",
+  Poor = "lame"
+}
 
 export interface Excuse {
   quality: ExcuseQuality;
   description: string;
 }
 
+enum MayOnlyBeAnExcuseId {};
+export type ExcuseId = MayOnlyBeAnExcuseId & string;
+export const ExcuseId = sequentialIdGenerator<ExcuseId>("ExcuseId:");
+
 export interface ExcuseDbRecord extends Excuse {
   id: ExcuseId;
 }
 
-type Diff<T, U> = T extends U ? never : T;
-type MakeAttributeOptional<T, ATTRIBUTE extends keyof T> = {
-  [P in Diff<keyof T, ATTRIBUTE>]: T[P];
-} & {
-  [P in ATTRIBUTE]?: T[ATTRIBUTE];
-};
-
 export const Get =
-  RestContracts.CreateAPI.Get
+  API.Get
+  .Path('/excuses/:id/')
   .PathParameters<{ id: ExcuseId }>()
-  .NoQueryParameters
-  .Returns<ExcuseDbRecord>()
-  .Path('/excuses/:id/');
+  .Returns<ExcuseDbRecord>();
 
 export const Query =
-  RestContracts.CreateAPI.Get
-  .NoPathParameters
+  API.Get
+  .Path('/excuses/')
   .QueryParameters<{quality?: ExcuseDbRecord["quality"]}>()
-  .Returns<ExcuseDbRecord[]>()
-  .Path('/excuses/');
+  .Returns<ExcuseDbRecord[]>();
 
 export const Put =
-  RestContracts.CreateAPI.Put
-  .NoPathParameters
-  .BodyParameters<Excuse | ExcuseDbRecord>()
-  .Returns<ExcuseDbRecord>()
-  .Path("/excuses/");
+  API.Put
+  .Path("/excuses/")
+  .Body<Excuse | ExcuseDbRecord>()
+  .Returns<ExcuseDbRecord>();

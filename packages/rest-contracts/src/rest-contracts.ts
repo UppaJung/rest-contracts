@@ -6,132 +6,93 @@ export enum Method {
   delete = 'delete',
 }
 
-export type PathParametersType = { [name: string]: string } | undefined
+export interface UsesMethod<METHOD extends Method = Method> {
+  method: METHOD;
+}
+export interface DELETE extends UsesMethod<Method.delete> {};
+export interface GET extends UsesMethod<Method.get> {};
+export interface PATCH extends UsesMethod<Method.patch> {};
+export interface POST extends UsesMethod<Method.post> {};
+export interface PUT extends UsesMethod<Method.put> {};
+
+export type MethodSupportingQueryParameter = Method.get | Method.delete;
+export type MethodSupportingBodyParameter = Method.patch | Method.post | Method.put;
+
+export type UsesMethodSupportingQueryParameter = UsesMethod<MethodSupportingQueryParameter>;
+export type UsesMethodSupportingBodyParameter = UsesMethod<MethodSupportingBodyParameter>;
+
+// Type requirements for parameters passed by path and string
+// (values must be stings, query parameters may be undefined)
+export type PathParametersType = { [name: string]: string }
 export type QueryParametersType = {
   [name: string]:
     (string | undefined) |
     (string | undefined)[]
 } |
-undefined;
+  undefined;
 
-export interface BaseAPI<
-  METHOD extends Method = Method,
-  PATH_PARAMETER_TYPE extends PathParametersType = any,
-  QUERY_PARAMETER_TYPE extends QueryParametersType = any,
-  BODY_PARAMETER_TYPE = any,
-  RESULT_TYPE = any,
-  PATH extends string = string
-> {
-  path: PATH
-  pathParams: PATH_PARAMETER_TYPE
-  queryParams: QUERY_PARAMETER_TYPE
-  bodyParams: BODY_PARAMETER_TYPE
-  result: RESULT_TYPE
-  method: METHOD
-  allParams: QUERY_PARAMETER_TYPE & PATH_PARAMETER_TYPE & BODY_PARAMETER_TYPE
+export interface PathParameters<PATH_PARAMETER_OBJECT extends PathParametersType = PathParametersType> {
+  pathParams: PATH_PARAMETER_OBJECT;
 }
 
-export interface QueryParameterAPI<
-  METHOD extends Method.get | Method.delete = Method.get | Method.delete,
-  PATH_PARAMETER_TYPE extends PathParametersType | undefined = any,
-  QUERY_PARAMETER_TYPE extends QueryParametersType | undefined = any,
-  RESULT_TYPE = any,
-  PATH extends string = string
-> extends BaseAPI<METHOD, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, undefined, RESULT_TYPE, PATH> {}
-export function isQueryParameterAPI(api: API): api is QueryParameterAPI {
-  return api.method === Method.get || api.method === Method.delete;
+export interface QueryParameters<QUERY_PARAMETER_OBJECT extends QueryParametersType = QueryParametersType> {
+  queryParams: QUERY_PARAMETER_OBJECT;
 }
 
-export interface BodyParameterAPI<
-  METHOD extends Method.put | Method.post | Method.patch = Method.put | Method.post | Method.patch,
-  PATH_PARAMETER_TYPE extends PathParametersType | undefined = any,
-  BODY_PARAMETER_TYPE = any,
-  RESULT_TYPE = any,
-  PATH extends string = string
-> extends BaseAPI<METHOD, PATH_PARAMETER_TYPE, undefined, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH> {}
-export function isBodyParameterAPI(api: API): api is BodyParameterAPI {
+export interface Body<BODY_PARAMETER_TYPE = any> {
+  bodyParams: BODY_PARAMETER_TYPE;
+}
+
+export interface Returns<RESULT_TYPE = any> {
+  result: RESULT_TYPE;
+}
+export interface AtPath<PATH extends string = string> {
+  path: PATH;
+}
+
+// Functions to validate if an API has different types of parameters
+export const hasQueryParameters = <REST_API extends UsesMethod & AtPath>(
+  api: REST_API
+): api is REST_API & QueryParameters<QUERY_PARAMS<REST_API>> =>
+  "queryParams" in api;
+
+export const hasPathParameters = <REST_API extends AtPath>(
+    api: REST_API
+  ): api is REST_API & PathParameters =>
+    "pathParams" in api &&
+    // Does an element of the path start with ":", such as /:id/
+    api.path.split("/").some( pathElement => pathElement.indexOf(":") === 0);
+
+export const hasBody = <REST_API extends UsesMethod & AtPath>(
+  api: REST_API
+): api is REST_API & Body<BODY_PARAMS<REST_API>> =>
+  "queryParams" in api;
+
+// Functions to validate the type of an API
+export function isBodyParameterAPI(api: UsesMethod): api is UsesMethodSupportingBodyParameter {
   return api.method === Method.patch || api.method === Method.post || api.method === Method.put;
 }
 
-export type API = QueryParameterAPI | BodyParameterAPI;
+export function isQueryParameterAPI(api: UsesMethod): api is UsesMethodSupportingQueryParameter {
+  return api.method === Method.get || api.method === Method.delete;
+}
 
-export interface GetAPI<
-  PATH_PARAMETER_TYPE extends PathParametersType,
-  QUERY_PARAMETER_TYPE extends QueryParametersType,
-  RESULT_TYPE,
-  PATH extends string
-> extends QueryParameterAPI<Method.get, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, RESULT_TYPE, PATH> {}
+export type PATH_PARAMS_OR_NULL<APITYPE> = APITYPE extends PathParameters ? APITYPE['pathParams'] : null;
+export type QUERY_PARAMS_OR_NULL<APITYPE> = APITYPE extends QueryParameters ? APITYPE['queryParams'] : null;
+export type PATH_PARAMS<APITYPE> = APITYPE extends PathParameters ? APITYPE['pathParams'] : undefined;
+export type QUERY_PARAMS<APITYPE> = APITYPE extends QueryParameters ? APITYPE['queryParams'] : undefined;
+export type PATH_AND_QUERY_PARAMS<APITYPE> = PATH_PARAMS<APITYPE> & QUERY_PARAMS<APITYPE>;
+export type BODY_PARAMS<APITYPE> = APITYPE extends Body ? APITYPE['bodyParams'] : undefined;
+export type RESULT<APITYPE> = APITYPE extends Returns ? APITYPE['result'] : void;
 
-export interface DeleteAPI<
-  PATH_PARAMETER_TYPE extends PathParametersType,
-  QUERY_PARAMETER_TYPE extends QueryParametersType,
-  RESULT_TYPE,
-  PATH extends string
-> extends QueryParameterAPI<Method.delete, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, RESULT_TYPE, PATH> {}
+const mergeTypes = <T, U>(t: T, u: U): T & U => Object.assign({}, t, u);
 
-export interface PutAPI<
-  PATH_PARAMETER_TYPE extends PathParametersType,
-  BODY_PARAMETER_TYPE,
-  RESULT_TYPE,
-  PATH extends string
-> extends BodyParameterAPI<Method.put, PATH_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH> {}
-
-export interface PostAPI<
-  PATH_PARAMETER_TYPE extends PathParametersType,
-  BODY_PARAMETER_TYPE,
-  RESULT_TYPE,
-  PATH extends string
-> extends BodyParameterAPI<Method.post, PATH_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH> {}
-
-export interface PatchAPI<
-  PATH_PARAMETER_TYPE extends PathParametersType,
-  BODY_PARAMETER_TYPE,
-  RESULT_TYPE,
-  PATH extends string
-> extends BodyParameterAPI<Method.patch, PATH_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH> {}
-
-type ConditionalAPI<
-  METHOD extends Method,
-  PATH_PARAMETER_TYPE extends PathParametersType,
-  QUERY_PARAMETER_TYPE extends QueryParametersType,
-  BODY_PARAMETER_TYPE,
-  RESULT_TYPE,
-  PATH extends string
-> = METHOD extends Method.get
-  ? GetAPI<PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, RESULT_TYPE, PATH>
-  : METHOD extends Method.delete
-    ? DeleteAPI<PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, RESULT_TYPE, PATH>
-    : METHOD extends Method.patch
-      ? PutAPI<PATH_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH>
-      : METHOD extends Method.post
-        ? PutAPI<PATH_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH>
-        : METHOD extends Method.put
-          ? PutAPI<PATH_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH>
-          : never
-
-
-export type PATH_PARAMS<APITYPE extends API> = APITYPE['pathParams']
-export type QUERY_PARAMS<APITYPE extends API> = APITYPE['queryParams']
-// export type DiffTypes<T, U> = T extends U ? never : T;
-export type PATH_AND_QUERY_PARAMS<APITYPE extends API> = PATH_PARAMS<APITYPE> & QUERY_PARAMS<APITYPE>;
-//  DiffTypes<PATH_PARAMS<APITYPE> & QUERY_PARAMS<APITYPE>, undefined>;
-export type BODY_PARAMS<APITYPE extends API> = APITYPE['bodyParams'];
-export type RESULT<APITYPE extends API> = APITYPE['result']
-
-const methodAndPathPairsAlreadySpecified = new Map<string, string>()
-
-function create<
-  METHOD extends Method,
-  PATH_PARAMETER_TYPE extends PathParametersType,
-  QUERY_PARAMETER_TYPE extends QueryParametersType,
-  BODY_PARAMETER_TYPE,
-  RESULT_TYPE,
-  PATH extends string
->(
+const methodAndPathPairsAlreadySpecified = new Set<string>()
+function ensureMethodAndPathHaveNotBeenDefinedBefore(
   method: Method,
   path: string
-): ConditionalAPI<METHOD, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH> {
-  const methodPathPair = method + path
+): void {
+  const methodPathPair = method + path;
   // Catch the case where two REST APIs are assigned the same path, presumably because
   // someone copied a REST API to create a new one but forgot to specify a new path.
   if (methodAndPathPairsAlreadySpecified.has(methodPathPair)) {
@@ -140,93 +101,113 @@ function create<
     )
   }
 
-  const trace = {} as { stack: string }
-  if (Error && 'captureStackTrace' in Error) {
-    ;(Error as { captureStackTrace(param: { stack?: string }): any }).captureStackTrace(trace)
-  }
-  methodAndPathPairsAlreadySpecified.set(
-    methodPathPair,
-    trace.stack || 'unknown (Error.captureStackTrace was not avaialble)'
-  )
-
-  return {
-    method,
-    path,
-  } as ConditionalAPI<METHOD, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH>
+  methodAndPathPairsAlreadySpecified.add(methodPathPair)
 }
 
-function createReturns<
-  PATH_PARAMETER_TYPE extends PathParametersType,
-  QUERY_PARAMETER_TYPE extends QueryParametersType,
-  BODY_PARAMETER_TYPE,
-  METHOD extends Method
->(method: METHOD) {
-  function Returns<RESULT_TYPE>() {
-    return {
-      Path: <PATH extends string>(path: PATH) =>
-        create<METHOD, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, BODY_PARAMETER_TYPE, RESULT_TYPE, PATH>(method, path),
-    }
+/***************************************************************************
+ *  Deprecated pre-version 1 constructors
+ */
+const addPath = <SO_FAR extends UsesMethod>(soFar: SO_FAR) => ({
+  Path:  <PATH extends string>(path: PATH) => {
+    ensureMethodAndPathHaveNotBeenDefinedBefore(soFar.method, path);
+    return mergeTypes({path} as AtPath<PATH>, soFar)
   }
-  const NoResultToReturn = {
-    Path: <PATH extends string>(path: PATH) =>
-      create<METHOD, PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, BODY_PARAMETER_TYPE, void, PATH>(method, path),
-  }
+});
 
-  return { Returns, NoResultToReturn }
-}
+const addReturns = <SO_FAR extends UsesMethod>(soFar: SO_FAR) => ({
+  Returns: <RESULT_TYPE>() => addPath(mergeTypes(soFar, {} as Returns<RESULT_TYPE> )),
+  NoResultToReturn: addPath(mergeTypes(soFar, {} as Returns<void>))
+});
 
-function createBodyParameter<PATH_PARAMETER_TYPE extends PathParametersType, METHOD extends Method>(
-  method: METHOD
-) {
-  function BodyParameters<BODY_PARAMETER_TYPE>() {
-    return createReturns<PATH_PARAMETER_TYPE, undefined, BODY_PARAMETER_TYPE, METHOD>(method)
-  }
-  const NoBodyParameters = createReturns<PATH_PARAMETER_TYPE, undefined, undefined, METHOD>(method)
+const addBodyParameter = <SO_FAR extends UsesMethod>(soFar: SO_FAR) => ({
+  BodyParameters: <BODY_PARAMETER_TYPE>() => addReturns(mergeTypes(soFar, {} as Body<BODY_PARAMETER_TYPE>)),
+  NoBodyParameters: addReturns(soFar),
+});
 
-  return { BodyParameters, NoBodyParameters }
-}
+const addQueryParameter = <SO_FAR extends UsesMethod>(soFar: SO_FAR) => ({
+  QueryParameters: <QUERY_PARAMETER_TYPE extends QueryParametersType>() =>
+    addReturns(mergeTypes(soFar, {queryParams: {} as QUERY_PARAMETER_TYPE} as QueryParameters<QUERY_PARAMETER_TYPE>)),
+    NoQueryParameters: addReturns(soFar)
+});
 
-function createQueryParameter<PATH_PARAMETER_TYPE extends PathParametersType, METHOD extends Method>(
-  method: METHOD
-) {
-  function QueryParameters<QUERY_PARAMETER_TYPE extends QueryParametersType>() {
-    return createReturns<PATH_PARAMETER_TYPE, QUERY_PARAMETER_TYPE, undefined, METHOD>(method)
-  }
-  const NoQueryParameters = createReturns<PATH_PARAMETER_TYPE, undefined, undefined, METHOD>(method)
+const createDeleteOrGet = <METHOD extends MethodSupportingQueryParameter>(method: METHOD) => ({
+  PathParameters: <PATH_PARAMETER_TYPE extends PathParametersType>() =>
+    addQueryParameter(mergeTypes({method} as UsesMethod<METHOD>, {pathParams: {} as PATH_PARAMETER_TYPE} as PathParameters<PATH_PARAMETER_TYPE>)),
+  NoPathParameters: addQueryParameter({method} as UsesMethod<METHOD>)
+});
 
-  return { QueryParameters, NoQueryParameters }
-}
-
-function createPathParameterForQueryParameterMethod<METHOD extends Method.get | Method.delete>(method: METHOD) {
-  function PathParameters<PATH_PARAMETER_TYPE extends PathParametersType>() {
-    return createQueryParameter<PATH_PARAMETER_TYPE, METHOD>(method)
-  }
-  const NoPathParameters = createQueryParameter<undefined, METHOD>(method)
-
-  return { PathParameters, NoPathParameters }
-}
-
-function createPathParameterForBodyParameterMethod<METHOD extends Method.patch | Method.post | Method.put>(
-  method: METHOD
-) {
-  function PathParameters<PATH_PARAMETER_TYPE extends PathParametersType>() {
-    return createBodyParameter<PATH_PARAMETER_TYPE, METHOD>(method)
-  }
-  const NoPathParameters = createBodyParameter<undefined, METHOD>(method)
-
-  return { PathParameters, NoPathParameters }
-}
-
-export const Get = createPathParameterForQueryParameterMethod(Method.get)
-export const Delete = createPathParameterForQueryParameterMethod(Method.delete)
-export const Put = createPathParameterForBodyParameterMethod(Method.put)
-export const Post = createPathParameterForBodyParameterMethod(Method.post)
-export const Patch = createPathParameterForBodyParameterMethod(Method.patch)
+const createPatchPostOrPut = <METHOD extends MethodSupportingBodyParameter>(method: METHOD) => ({
+  PathParameters: <PATH_PARAMETER_TYPE extends PathParametersType>() =>
+    addBodyParameter(mergeTypes({method} as UsesMethod<METHOD>, {pathParams: {} as PATH_PARAMETER_TYPE} as PathParameters<PATH_PARAMETER_TYPE>)),
+  NoPathParameters: addBodyParameter({method} as UsesMethod<METHOD>)
+});
 
 export const CreateAPI = {
-  Get,
-  Delete,
-  Put,
-  Post,
-  Patch,
+  Get: createDeleteOrGet(Method.get),
+  Delete: createDeleteOrGet(Method.delete),
+  Put: createPatchPostOrPut(Method.put),
+  Post: createPatchPostOrPut(Method.post),
+  Patch: createPatchPostOrPut(Method.patch),
+}
+
+/********************************************************************************
+ * Version 1 constructors API.[GET|DELETE|PATCH|POST|PUT]
+ */
+export type ApiConstructor<SO_FAR extends AtPath & UsesMethod> = ({
+  Returns<RESULT_TYPE>(): SO_FAR & Returns<RESULT_TYPE>;
+}) & (
+  SO_FAR extends PathParameters ? {} : {
+    PathParameters<PATH_PARAMETERS extends PathParametersType>():
+      ApiConstructor<SO_FAR & PathParameters<PATH_PARAMETERS>>
+}) & (
+  SO_FAR extends QueryParameters | UsesMethodSupportingBodyParameter ? {} : {
+    QueryParameters<QUERY_PARAMETERS extends QueryParametersType>():
+      ApiConstructor<SO_FAR & QueryParameters<QUERY_PARAMETERS>>
+}) & (
+  SO_FAR extends MethodSupportingBodyParameter | UsesMethodSupportingQueryParameter ? {} : {
+    Body<BODY_PARAMETERS>():
+      ApiConstructor<SO_FAR & Body<BODY_PARAMETERS>>
+})
+
+const constructParameters = <SO_FAR extends
+  AtPath &
+  UsesMethod & (
+    {} |
+    PathParameters |
+    QueryParameters |
+    Body
+  )>(
+    soFar: SO_FAR
+  ): ApiConstructor<SO_FAR> => {
+    const constructor = ({
+      Returns: <RESULT_TYPE>() => mergeTypes(soFar, {result: {} as RESULT_TYPE} as Returns<RESULT_TYPE>),
+      ...(hasPathParameters(soFar) ? {} : {
+        PathParameters: <PATH_PARAMETERS extends PathParametersType>() =>
+          constructParameters(mergeTypes(soFar, {pathParams: {} as PATH_PARAMETERS} as PathParameters<PATH_PARAMETERS>))
+      }),
+      ...(hasQueryParameters(soFar) || isBodyParameterAPI(soFar) ? {} : {
+        QueryParameters: <QUERY_PARAMETERS extends QueryParametersType>() =>
+          constructParameters(mergeTypes(soFar, {queryParams: {} as QUERY_PARAMETERS} as QueryParameters<QUERY_PARAMETERS>))
+      }),
+      ...(hasBody(soFar) || isQueryParameterAPI(soFar) ? {} : {
+        Body: <BODY_PARAMETERS>() =>
+          constructParameters(mergeTypes(soFar, {bodyParams: {} as BODY_PARAMETERS} as Body<BODY_PARAMETERS>))
+      })
+    }) as ApiConstructor<SO_FAR>;
+    return constructor;
+}
+
+const constructPath = <SO_FAR extends UsesMethod>(soFar: SO_FAR) => ({
+  Path: <PATH extends string>(path: PATH) => {
+    ensureMethodAndPathHaveNotBeenDefinedBefore(soFar.method, path);
+    return constructParameters(mergeTypes(soFar, {path} as AtPath<PATH>))
+  }
+});
+
+export const API = {
+  Get: constructPath({method: Method.get} as GET),
+  Delete: constructPath({method: Method.delete} as DELETE),
+  Put: constructPath({method: Method.patch} as PATCH),
+  Post: constructPath({method: Method.post} as POST),
+  Patch: constructPath({method: Method.put} as PUT),
 }

@@ -6,7 +6,7 @@ import {BODY_PARAMS, PATH_PARAMS, QUERY_PARAMS} from "rest-contracts";
  * An express request enhanced so that the query, params, and body
  * attributes are correctly typed to match an specified API.
  */
-export interface TypedExpressRequest<API extends RestContracts.API> extends express.Request {
+export interface TypedExpressRequest<API extends RestContracts.UsesMethod> extends express.Request {
   query: QUERY_PARAMS<API>;
   params: PATH_PARAMS<API>;
   body: BODY_PARAMS<API>;
@@ -20,29 +20,34 @@ export interface TypedExpressRequest<API extends RestContracts.API> extends expr
  * When using wrap, your handler will be called with this interface.
  */
 export type TypedExpressHandlerDeleteGet<
-    API extends RestContracts.QueryParameterAPI
+    API extends RestContracts.UsesMethodSupportingQueryParameter
   > = (
-      pathAndQueryParams: PATH_PARAMS<API> & QUERY_PARAMS<API>,
+      pathAndQueryParams:
+        PATH_PARAMS<API> extends undefined ?
+          QUERY_PARAMS<API> :
+        QUERY_PARAMS<API> extends undefined ?
+          PATH_PARAMS<API> :
+          PATH_PARAMS<API> & QUERY_PARAMS<API>,
       req: TypedExpressRequest<API>,
       res: express.Response,
       next: express.NextFunction,
     ) => RestContracts.RESULT<API> | undefined | Promise<RestContracts.RESULT<API> | undefined>;
 
 export type TypedExpressHandlerPatchPostPut<
-  API extends RestContracts.BodyParameterAPI
+  API extends RestContracts.UsesMethodSupportingBodyParameter
 > = (
     body: BODY_PARAMS<API>,
-    pathAndQueryParams: PATH_PARAMS<API> & QUERY_PARAMS<API>,
+    parameters: PATH_PARAMS<API>,
     req: TypedExpressRequest<API>,
     res: express.Response,
     next: express.NextFunction,
   ) => RestContracts.RESULT<API> | undefined | Promise<RestContracts.RESULT<API> | undefined>;
 
 
- export type TypedExpressHandler<API extends RestContracts.API> =
-  API extends RestContracts.QueryParameterAPI ?
+ export type TypedExpressHandler<API> =
+  API extends RestContracts.UsesMethodSupportingQueryParameter ?
     TypedExpressHandlerDeleteGet<API> :
-  API extends RestContracts.BodyParameterAPI ?
+  API extends RestContracts.UsesMethodSupportingBodyParameter ?
     TypedExpressHandlerPatchPostPut<API> :
     never;
 
@@ -87,15 +92,25 @@ export class RestContractsExpressServer {
    * @param handler A handler that takes the prescribed input and returns
    * the prescribed output (or a promise to deliver the prescribed output.)
    */
-  public implement<API extends RestContracts.QueryParameterAPI>(
+  public implement<API extends RestContracts.UsesMethodSupportingQueryParameter>(
     api: API,
-    handler: TypedExpressHandlerDeleteGet<API>
+    handler: (
+      pathAndQueryParams:
+        PATH_PARAMS<API> extends undefined ?
+          QUERY_PARAMS<API> :
+        QUERY_PARAMS<API> extends undefined ?
+          PATH_PARAMS<API> :
+          PATH_PARAMS<API> & QUERY_PARAMS<API>,
+      req: TypedExpressRequest<API>,
+      res: express.Response,
+      next: express.NextFunction,
+    ) => RestContracts.RESULT<API> | undefined | Promise<RestContracts.RESULT<API> | undefined>
   ): TypedExpressHandlerDeleteGet<API>;
-  public implement<API extends RestContracts.BodyParameterAPI>(
+  public implement<API extends RestContracts.UsesMethodSupportingBodyParameter>(
     api: API,
     handler: TypedExpressHandlerPatchPostPut<API>
   ): TypedExpressHandlerPatchPostPut<API>;
-  public implement<API extends RestContracts.API>(
+  public implement<API extends RestContracts.UsesMethod & RestContracts.AtPath>(
     api: API,
     handler: TypedExpressHandler<typeof api>
   ): TypedExpressHandler<typeof api> {
@@ -140,7 +155,7 @@ export class RestContractsExpressServer {
  * the prescribed output (or a promise to deliver the prescribed output.)
  */
 function wrap<
-  API extends RestContracts.API
+  API extends RestContracts.UsesMethod
 >(
   api: API,
   handler: TypedExpressHandler<typeof api>,
@@ -160,7 +175,7 @@ function wrap<
       } else if (RestContracts.isBodyParameterAPI(api)) {
         result = await (handler as TypedExpressHandlerPatchPostPut<typeof api>)(
           req.body as BODY_PARAMS<typeof api>,
-          Object.assign({}, req.query || {}, req.params || {}) as RestContracts.PATH_AND_QUERY_PARAMS<typeof api>,
+          Object.assign({}, req.query || {}, req.params || {}) as RestContracts.PATH_PARAMS<typeof api>,
           req as TypedExpressRequest<typeof api>,
           res,
           next
