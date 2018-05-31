@@ -262,12 +262,11 @@ type RequestHandler<API extends RestContracts.AtPath & RestContracts.UsesMethod>
   )
   : never;
 
-type RequestFactory = <
-  API extends RestContracts.AtPath & RestContracts.UsesMethod
->(
-  api: API
-) => RequestHandler<API>;
-
+// type RequestFactory = <
+//   API extends RestContracts.AtPath & RestContracts.UsesMethod
+// >(
+//   api: API
+// ) => RequestHandler<API>;
 
 /**
  * Create a factory that will generated a promise-based client functions
@@ -286,7 +285,7 @@ export const getClientCreationFunction = (
     api: API,
     baseUrl: string = defaultBaseUrl,
     apiDefaultOptions: RequestOptions = {},
-  ) => {
+  ): RequestHandler<API> => {
     const defaultOptions: RequestOptions = {...factoryDefaultOptions, ...apiDefaultOptions};
     // Remove any trailing slashes from the base URL since the path will start with a slash
     baseUrl = baseUrl.replace(/\/+$/, "")
@@ -319,7 +318,7 @@ export const getClientCreationFunction = (
     if (RestContracts.isQueryParameterAPI) {
       if (hasPathParameters) {
         // Return a function with path parameters and query parameters specified together as one parameter
-        return (
+        return ( (
           parameters: RestContracts.PATH_AND_QUERY_PARAMS<API>,
           options: RequestOptions = {}
         ) => {
@@ -331,10 +330,10 @@ export const getClientCreationFunction = (
             method,
             url: addQueryToUrl(baseUrl + pathWithParameters,  remainingParameters),
           })
-        };
+         } ) as RequestHandler<API>;
       } else {
         // Return a function with just query parameters
-        return (
+        return ( (
           queryParameters: RestContracts.QUERY_PARAMS<API>,
           options: RequestOptions = {}
         ) => {
@@ -344,12 +343,12 @@ export const getClientCreationFunction = (
             method,
             url: addQueryToUrl(baseUrl + pathWithStartingSlash,  queryParameters)
           })
-        };
+        } ) as RequestHandler<API>;
       }
     } else if (RestContracts.isBodyParameterAPI(api)) {
       if (hasPathParameters) {
         // Return a function with path parameters followed by body parameters
-        return (
+        return ( (
           pathParameters: RestContracts.PATH_PARAMS<API>,
           bodyParameters: RestContracts.BODY_PARAMS<API>,
           options: RequestOptions = {},
@@ -363,10 +362,10 @@ export const getClientCreationFunction = (
             url: baseUrl + pathWithParameters,
             bodyParameters
           });
-        };
+        } ) as RequestHandler<API>;
       } else {
         // Return a function with body parameters but no path parameters
-        return (
+        return ( (
           bodyParameters: RestContracts.BODY_PARAMS<API>,
           options: RequestOptions = {},
         ) => {
@@ -377,7 +376,7 @@ export const getClientCreationFunction = (
             url: baseUrl + pathWithStartingSlash,
             bodyParameters
           });
-        };
+        } ) as RequestHandler<API>;
       }
     }
     throw new Error("Illegal method");

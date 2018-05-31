@@ -1,12 +1,12 @@
 import * as express from "express";
-import * as RestContracts from "/rest-contracts";
-import {BODY_PARAMS, PATH_PARAMS, QUERY_PARAMS} from "/rest-contracts";
+import * as RestContracts from "rest-contracts";
+import {BODY_PARAMS, PATH_PARAMS, QUERY_PARAMS} from "rest-contracts";
 
 /**
  * An express request enhanced so that the query, params, and body
  * attributes are correctly typed to match an specified API.
  */
-export interface TypedExpressRequest<API> extends express.Request {
+export interface TypedExpressRequest<API extends RestContracts.UsesMethod> extends express.Request {
   query: QUERY_PARAMS<API>;
   params: PATH_PARAMS<API>;
   body: BODY_PARAMS<API>;
@@ -110,7 +110,7 @@ export class RestContractsExpressServer {
     api: API,
     handler: TypedExpressHandlerPatchPostPut<API>
   ): TypedExpressHandlerPatchPostPut<API>;
-  public implement<API extends RestContracts.UsesMethod & RestContracts.ExposedViaPath>(
+  public implement<API extends RestContracts.UsesMethod & RestContracts.AtPath>(
     api: API,
     handler: TypedExpressHandler<typeof api>
   ): TypedExpressHandler<typeof api> {

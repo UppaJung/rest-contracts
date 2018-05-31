@@ -1,5 +1,5 @@
 import * as Lambda from "aws-lambda";
-import * as RestContracts from "/rest-contracts";
+import * as RestContracts from "rest-contracts";
 
 export interface APIGatewayProxyEvent<API extends RestContracts.UsesMethod & RestContracts.AtPath> extends Lambda.APIGatewayProxyEvent {
   pathParameters: RestContracts.PATH_PARAMS_OR_NULL<API>;
@@ -257,7 +257,7 @@ export const wrapLambdaParametersAndResult = <
 
       // Encode the body object as specified by the ResultEncoding option (JSON is default)
       const bodyObject = (
-          (typeof(handlersResult) === "string") &&
+          (typeof(handlersResult as any) === "string") &&
           (resultEncoding === ResultEncoding.RawString)
         ) ? {
           body: handlersResult as string

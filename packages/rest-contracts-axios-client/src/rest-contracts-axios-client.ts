@@ -1,5 +1,5 @@
 import Axios, { AxiosPromise, AxiosRequestConfig } from "axios";
-import * as RestContracts from "/rest-contracts";
+import * as RestContracts from "rest-contracts";
 
 export type RequestOptions = AxiosRequestConfig;
 
@@ -78,11 +78,11 @@ type RequestHandler<API extends RestContracts.AtPath & RestContracts.UsesMethod>
   )
   : never;
 
-type RequestFactory = <
-API extends RestContracts.AtPath & RestContracts.UsesMethod
->(
-  api: API
-) => RequestHandler<API>;
+// type RequestFactory = <
+// API extends RestContracts.AtPath & RestContracts.UsesMethod
+// >(
+//   api: API
+// ) => RequestHandler<API>;
 
 /**
  * Create a factory that will generated a promise-based client functions
