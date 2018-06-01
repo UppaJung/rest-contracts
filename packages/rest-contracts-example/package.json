@@ -1,6 +1,6 @@
 {
   "name": "rest-contracts-example",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "An example using rest-contracts",
   "scripts": {
     "build": "tsc",
@@ -25,9 +25,9 @@
   "author": "Stuart Schechter",
   "license": "MIT",
   "dependencies": {
-    "rest-contracts": "^1.0.7",
-    "rest-contracts-axios-client": "^1.0.3",
-    "rest-contracts-express-server": "^1.0.3"
+    "rest-contracts": "^1.0.8",
+    "rest-contracts-axios-client": "^1.0.4",
+    "rest-contracts-express-server": "^1.0.4"
   },
   "devDependencies": {
     "lint-staged": "4.0.0",
