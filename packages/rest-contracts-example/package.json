@@ -25,8 +25,8 @@
   "author": "Stuart Schechter",
   "license": "MIT",
   "dependencies": {
-    "rest-contracts": "^1.0.8",
-    "rest-contracts-axios-client": "^1.0.4",
+    "rest-contracts": "false1.0.9",
+    "rest-contracts-axios-client": "false1.0.5",
     "rest-contracts-express-server": "^1.0.4"
   },
   "devDependencies": {

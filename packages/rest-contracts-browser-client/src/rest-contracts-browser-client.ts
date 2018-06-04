@@ -154,12 +154,12 @@ export interface RequestOptions {
 function request<T>(params: RequestOptions & {
   method: RestContracts.Method,
   url: string,
-  bodyParameters?: any,
+  body?: any,
 }) {
   const {
     method,
     url,
-    bodyParameters,
+    body,
     headers = {},
     noCache = false,
     timeoutInMs = 0,
@@ -225,10 +225,10 @@ function request<T>(params: RequestOptions & {
               method === RestContracts.Method.put ||
               method === RestContracts.Method.patch
             ) &&
-            bodyParameters != null
+            body != null
       ) {
         xhr.setRequestHeader("content-type", "application/json");
-        xhr.send(JSON.stringify(bodyParameters));
+        xhr.send(JSON.stringify(body));
       } else {
         xhr.send();
       }
@@ -237,36 +237,6 @@ function request<T>(params: RequestOptions & {
     }
   });
 }
-
-type RequestHandler<API extends RestContracts.AtPath & RestContracts.UsesMethod> =
-  API extends RestContracts.UsesMethodSupportingBodyParameter ? (
-    API extends RestContracts.PathParameters ? (
-      (pathParams: RestContracts.PATH_PARAMS<API>, bodyParams: RestContracts.BODY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
-    ) : (
-      (bodyParams: RestContracts.BODY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
-    )
-  )
-  :
-  API extends RestContracts.UsesMethodSupportingQueryParameter ? (
-    API extends RestContracts.PathParameters & RestContracts.QueryParameters ? (
-      (pathAndQueryParameters: RestContracts.PATH_PARAMS<API> & RestContracts.QUERY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
-    ) :
-    API extends RestContracts.PathParameters ? (
-        (pathAndQueryParameters: RestContracts.PATH_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
-    ) :
-    API extends RestContracts.QueryParameters ? (
-        (pathAndQueryParameters: RestContracts.QUERY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
-    ) : (
-      (options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
-    )
-  )
-  : never;
-
-// type RequestFactory = <
-//   API extends RestContracts.AtPath & RestContracts.UsesMethod
-// >(
-//   api: API
-// ) => RequestHandler<API>;
 
 /**
  * Create a factory that will generated a promise-based client functions
@@ -285,7 +255,7 @@ export const getClientCreationFunction = (
     api: API,
     baseUrl: string = defaultBaseUrl,
     apiDefaultOptions: RequestOptions = {},
-  ): RequestHandler<API> => {
+  ): RestContracts.ClientFunction<API, RequestOptions> => {
     const defaultOptions: RequestOptions = {...factoryDefaultOptions, ...apiDefaultOptions};
     // Remove any trailing slashes from the base URL since the path will start with a slash
     baseUrl = baseUrl.replace(/\/+$/, "")
@@ -314,70 +284,38 @@ export const getClientCreationFunction = (
         .filter ( pathParameter => typeof(pathParameter) !== "undefined" ) as [string, number][]
     );
     const hasPathParameters = parameterToIndex.size > 0;
+    const hasBody = RestContracts.hasBody(api);
 
-    if (RestContracts.isQueryParameterAPI) {
-      if (hasPathParameters) {
-        // Return a function with path parameters and query parameters specified together as one parameter
-        return ( (
-          parameters: RestContracts.PATH_AND_QUERY_PARAMS<API>,
-          options: RequestOptions = {}
-        ) => {
-          const {pathWithParameters, remainingParameters} = assemblePath(pathElements, parameterToIndex, parameters);
+    if (RestContracts.isQueryParameterAPI(api)) {
+      return ( (...args: any[]) => {
+        const hasQueryParameters = RestContracts.hasQueryParameters(api);
+        const parameters = (
+          (hasPathParameters || hasQueryParameters) ?
+          args.shift() : undefined
+        ) as RestContracts.PATH_AND_QUERY_PARAMS<API>;
+        const options = {...defaultOptions, ...(args.shift() || {} as RequestOptions)};
+        const {pathWithParameters, remainingParameters} = assemblePath(pathElements, parameterToIndex, parameters);
 
-          return request<RestContracts.RESULT<API>>({
-            ...defaultOptions,
-            ...options,
-            method,
-            url: addQueryToUrl(baseUrl + pathWithParameters,  remainingParameters),
-          })
-         } ) as RequestHandler<API>;
-      } else {
-        // Return a function with just query parameters
-        return ( (
-          queryParameters: RestContracts.QUERY_PARAMS<API>,
-          options: RequestOptions = {}
-        ) => {
-          return request<RestContracts.RESULT<API>>({
-            ...defaultOptions,
-            ...options,
-            method,
-            url: addQueryToUrl(baseUrl + pathWithStartingSlash,  queryParameters)
-          })
-        } ) as RequestHandler<API>;
-      }
+        return request<RestContracts.RESULT<API>>({
+          ...options,
+          method,
+          url: addQueryToUrl(baseUrl + pathWithParameters,  remainingParameters),
+        });
+      } ) as RestContracts.ClientFunction<API, RequestOptions> ;
     } else if (RestContracts.isBodyParameterAPI(api)) {
-      if (hasPathParameters) {
-        // Return a function with path parameters followed by body parameters
-        return ( (
-          pathParameters: RestContracts.PATH_PARAMS<API>,
-          bodyParameters: RestContracts.BODY_PARAMS<API>,
-          options: RequestOptions = {},
-        ) => {
-          const {pathWithParameters} = assemblePath(pathElements, parameterToIndex, pathParameters);
+      return ( (...args: any[]) => {
+        const parameters = (hasPathParameters ? args.shift() : undefined) as RestContracts.PATH_PARAMS<API>;
+        const body = (hasBody ? args.shift() : undefined) as RestContracts.Body<API>;
+        const options = {...defaultOptions, ...(args.shift() || {} as RequestOptions)};
+        const {pathWithParameters, remainingParameters} = assemblePath(pathElements, parameterToIndex, parameters);
 
-          return request<RestContracts.RESULT<API>>({
-            ...defaultOptions,
-            ...options,
-            method,
-            url: baseUrl + pathWithParameters,
-            bodyParameters
-          });
-        } ) as RequestHandler<API>;
-      } else {
-        // Return a function with body parameters but no path parameters
-        return ( (
-          bodyParameters: RestContracts.BODY_PARAMS<API>,
-          options: RequestOptions = {},
-        ) => {
-          return request<RestContracts.RESULT<API>>({
-            ...defaultOptions,
-            ...options,
-            method,
-            url: baseUrl + pathWithStartingSlash,
-            bodyParameters
-          });
-        } ) as RequestHandler<API>;
-      }
+        return request<RestContracts.RESULT<API>>({
+          ...options,
+          method,
+          body,
+          url: addQueryToUrl(baseUrl + pathWithParameters,  remainingParameters),
+        });
+      } ) as RestContracts.ClientFunction<API, RequestOptions> ;
     }
     throw new Error("Illegal method");
   }

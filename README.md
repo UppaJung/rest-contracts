@@ -16,15 +16,15 @@ First, you can use auto-complete to pick an HTTP REST method.
 
 ![Intellisense shows you the Method options avaialble](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/method-choice.png?raw=true)
 
-Then, you choose whether your method will have path paramters.
+Next, you choose the specify the path.  Any path parameters should appear between slashes and be preceded by a colon (":").
 
-![Intellisense gives you the option to specify path parameters, or no path parameters](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-path-parameters.png?raw=true)
+![Intellisense indicates where to specify the path.](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-path.png?raw=true)
 
-Next, you specify query parameters (get & delete method) or body parameters (put, post, & patch).
+Then, you specify parameters.  In this example, we'll set path parameters but not query parameters.
 
-![Intellisense gives you the option to specify query/body parameters, or none](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-query-parameters.png?raw=true)
+![Intellisense gives you the option to specify parameters](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-path-parameters.png?raw=true)
 
-You then specify a result, or choose to return no result.
+Finally, you specify a result type or return void.
 
 ![Intellisense gives you the option to specify a result or return no result (void)](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-returns.png?raw=true)
 
@@ -39,41 +39,24 @@ The result is a complete contract.
 A full contract for a data type (e.g. an Excuse object) might look something like this, with a GET request for individaul objects, a GET request for multiple objects, and a PUT request to add items.
 
 ```ts
-// excuse-contract.ts
-import * as RestContracts from "rest-contracts";
-
-export enum ExcuseQuality {
-  Good = "solid",
-  Mediocre = "iffy",
-  Poor = "lame"
-}
-
-export interface Excuse {
-  id: string;
-  quality: ExcuseQuality;
-  description: string;
-}
-
+// from rest-contracts-example/src/excuse-contract.ts
 export const Get =
-  RestContracts.CreateAPI.Get
-  .PathParameters<{ id: string }>()
-  .NoQueryParameters
-  .Returns<Excuse>()
-  .Path('/excuses/:id/');
+  API.Get
+  .Path('/excuses/:id/')
+  .PathParameters<{ id: ExcuseId }>()
+  .Returns<ExcuseDbRecord>();
 
 export const Query =
-  RestContracts.CreateAPI.Get
-  .NoPathParameters
-  .QueryParameters<{quality?: Excuse["quality"]}>()
-  .Returns<Excuse[]>()
-  .Path('/excuses/');
+  API.Get
+  .Path('/excuses/')
+  .QueryParameters<{quality?: ExcuseDbRecord["quality"]}>()
+  .Returns<ExcuseDbRecord[]>();
 
 export const Put =
-  RestContracts.CreateAPI.Put
-  .NoPathParameters
-  .BodyParameters<Excuse>()
-  .Returns<Excuse>()
-  .Path("/excuses/");
+  API.Put
+  .Path("/excuses/")
+  .Body<Excuse | ExcuseDbRecord>()
+  .Returns<ExcuseDbRecord>();
 ```
 
 The Get, Query, and Put objects generated in this example contain a path and method.  More importantly, the compiler attaches to these objects additional type information that defines parameters and return type of each API call.  These attached types are consumed by packages that help you to implement the APIs on the server side that implement client functions to allow client code to call these APIs--providing compile-time checking of compliance with the interface contract on both sides.
@@ -83,56 +66,51 @@ The Get, Query, and Put objects generated in this example contain a path and met
 To create servers implement the API in these contracts, you can currently used rest-contracts-express-server, rest-contracts-lambda, or implement your own.
 
 ```ts
-// server.ts
-import * as bodyParser from "body-parser";
-import * as express from "express";
-import * as RestContracts from "rest-contracts";
-import * as RestContractsExpressServer from "rest-contracts-express-server";
-import * as ExcuseContract from "./excuse-contract";
+// from rest-contracts-example/src/server.ts
 
-// If you're using express, you'll still have to configure it,
-// making sure to use bodyParser.json()
-const router = express.Router()
-const app = express();
-// This line causes express to parse JSON responses for you.
-app.use(bodyParser.json());
-app.use(router);
-const PORT = 5000;
-app.listen(PORT);
+// You'll implement your APIs by calling the implement method of this class.
+// (Want to add authentication or other steps?  Just create a subclass.)
+const ourApi = new RestContractsExpressServer.RestContractsExpressServer(router);
 
-export function run(): void {
-  console.log("Starting API server");
+// Best to create a new file here, import the ourApi class,
+// and separate implementations into different files.
+const excuseMemoryDatabaseTable =
+  new Map<ExcuseContract.ExcuseDbRecord["id"], ExcuseContract.ExcuseDbRecord>();
 
-  // You'll implement your APIs by calling the implement method of this class.
-  // (Want to add authentication or other steps?  Just create a subclass!)
-  const ourApi = new RestContractsExpressServer.RestContractsExpressServer(router);
+// We've merged all params into params, but req, res, & next are still available
+// to you. (We've also added typings to the parameter fields of the req object!)
 
-  // Best to create a new file here, import the ourApi class,
-  // and separate implementations into different files.
-  const excuseMemoryTable =
-    new Map<ExcuseContract.Excuse["id"], ExcuseContract.Excuse>();
+// Implement the Excuse Put method
+ourApi.implement(ExcuseContract.Put, (body, params, req, res, next) => {
+  const excuseOrExcuseDbRecord = body;
+  const excuseDbRecord: ExcuseContract.ExcuseDbRecord =
+    ("id" in excuseOrExcuseDbRecord && excuseOrExcuseDbRecord.id) ?
+      // parameter is already an ExcuseDbRecord with an ID assigned
+      excuseOrExcuseDbRecord :
+      // parameters is an excuse that is not yet in the database and
+      // needs to be assigned a unique ExcuseId
+      {
+        ...excuseOrExcuseDbRecord,
+        id: ExcuseContract.ExcuseId()
+      };
+  excuseMemoryDatabaseTable.set( excuseDbRecord.id, excuseDbRecord );
+  // Put methods return a copy of the record that they stored
+  return excuseDbRecord;
+});
 
-  // We've merged all params into params, but req, res, & next are still available
-  // to you. (We've also added typings to the parameter fields of the req object!)
+// Implement the Excuse Get method
+// (leaving out req, res, next since we're not using them)
+ourApi.implement(ExcuseContract.Get, (params) =>
+  excuseMemoryDatabaseTable.get(params.id)
+);
 
-  // Implement the Excuse Put method
-  ourApi.implement(ExcuseContract.Put, (params, req, res, next) => {
-    excuseMemoryTable.set( params.id, params );
-    return params;
-  });
-
-  // Implement the Excuse Get method
-  // (leaving out req, res, next since we're not using them)
-  ourApi.implement(ExcuseContract.Get, (params) =>
-    excuseMemoryTable.get(params.id)
-  );
-
-  // Impelmenting the Excuse directory-level Get, which can query on excuse quality
-  ourApi.implement(ExcuseContract.Query, (params) =>
-    [...excuseMemoryTable.values()].
-      filter( values => (!params.quality) || values.quality === params.quality )
-  );
-}
+// Impelment the Excuse directory-level Get, which can query on quality
+ourApi.implement(ExcuseContract.Query, (params) =>
+  [...excuseMemoryDatabaseTable.values()].
+    // Take all exucses if no quality parameter speicfied,
+    // or only those excuses with a quality matching the one queried for
+    filter( values => (!params.quality) || values.quality === params.quality )
+);
 ```
 
 ### REST-contracts client packages build typed client functions for you.
@@ -140,62 +118,38 @@ export function run(): void {
 To automatically build client functions to call the API in the contract, we have a minimal rest-contracts-browser-client, which has no dependencies so that it can run compactly in the browser, and rest-contracts-axios-client, which builds on top of axios so that it can run within node or in the browser.  Since our example runs on node, it uses the latter.
 
 ```ts
-// client.ts
-import * as RestContracts from "rest-contracts";
-import {getClientCreationFunction} from "rest-contracts-axios-client";
-import * as ExcuseContract from "./excuse-contract";
+// from rest-contracts-example/src/client.ts
 
-// To create client calls, the factory needs the URL and any default configuration settings
-// we might want to specify.
-const createRequestFunction = getClientCreationFunction  ("http://localhost:5000/", {timeout: 5000});
+// Add two excuses.  Excuses for what?  Not using TypeScript.
+const firstExcuseStored = await excuseClient.put({
+  quality: ExcuseQuality.Poor,
+  description: "I don't use TypeScript I enjoy debugging type errors in production software.",
+});
 
-// Call the factory to create a request functio nfor Get, Query, and Put
-const excuseClient = {
-  get: createRequestFunction(ExcuseContract.Get),
-  query: createRequestFunction(ExcuseContract.Query),
-  put: createRequestFunction(ExcuseContract.Put),
-};
+console.log("Put the first excuse", firstExcuseStored);
 
-// This function runs our example queries.  Try modifying the requests
-// in VSCode to see Intellisense autocomplete parameters, dislpay type
-// information, and report type errors.
-export async function run(): Promise<void> {
-  console.log("Starting API client");
+const secondExcuseStored = await excuseClient.put({
+  quality: ExcuseQuality.Poor,
+  description: "My nervous systems has a built-in type checker that catches errors before they become keystrokes.",
+});
 
-  try {
-    // Add two excuses.  Excuses for what?  Not using TypeScript.
-    await excuseClient.put({
-      id: "df458df",
-      quality: ExcuseContract.ExcuseQuality.Poor,
-      description: "I don't use TypeScript because I enjoy debugging type errors in production software.",
-    });
+console.log("Put the second excuse", secondExcuseStored);
+const excuseId = firstExcuseStored.id;
 
-    console.log("Put the first excuse");
+// Retrieve the first excuse again using get with a path parameter.
+const excuse = await excuseClient.get({id: excuseId});
 
-    await excuseClient.put({
-      id: "asdflewi",
-      quality: ExcuseContract.ExcuseQuality.Poor,
-      description: "My nervous systems has a built-in type checker that catches errors before they become keystrokes.",
-    });
+// Retrieve the second excuse again using get with a path parameter.
+const secondExcuse = await excuseClient.get({id: secondExcuseStored.id});
 
-    console.log("Put the second excuse");
+// Retrieve excuses using Query (get with a query parameter)
+const lameExcuses = await excuseClient.query({quality: ExcuseContract.ExcuseQuality.Poor});
+console.log("Retrieved excuses:", lameExcuses);
 
-    // Retrieve the second excuse using get with a path parameter.
-    const secondExcuse = await excuseClient.get({id: "asdflewi"});
-
-    // Retrieve excuses using Query (get with a query parameter)
-    const lameExcuses = await excuseClient.query({quality: ExcuseContract.ExcuseQuality.Poor});
-    console.log("Retrieved excuses:", lameExcuses);
-
-    // Retrieve excuses using Query (get with a query parameter)
-    const goodExcuses = await excuseClient.query({quality: ExcuseContract.ExcuseQuality.Good});
-    console.log("Here are all the valid excuses for not using TypeScript:", goodExcuses);
-    console.log("Yup, that's all of them.");
-
-  } catch (error) {
-    console.log("Error:", error);
-  }
-}
+// Retrieve excuses using Query (get with a query parameter)
+const goodExcuses = await excuseClient.query({quality: ExcuseContract.ExcuseQuality.Good});
+console.log("Here are all the valid excuses for not using TypeScript:", goodExcuses);
+console.log("Yup, that's all of them.");
 ```
 
 You can download the working example from the package/rest-contracts-example directory of the repository on GitHub, or download it as an npm package.

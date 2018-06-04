@@ -51,22 +51,24 @@ export interface AtPath<PATH extends string = string> {
 }
 
 // Functions to validate if an API has different types of parameters
-export const hasQueryParameters = <REST_API extends UsesMethod & AtPath>(
-  api: REST_API
-): api is REST_API & QueryParameters<QUERY_PARAMS<REST_API>> =>
+export const hasQueryParameters = (
+  api: any
+): api is QueryParameters =>
   "queryParams" in api;
 
-export const hasPathParameters = <REST_API extends AtPath>(
-    api: REST_API
-  ): api is REST_API & PathParameters =>
+export const hasPathParameters = (
+    api: any
+  ): api is PathParameters =>
     "pathParams" in api &&
+    "path" in api &&
+    typeof(api.path) === "string" &&
     // Does an element of the path start with ":", such as /:id/
-    api.path.split("/").some( pathElement => pathElement.indexOf(":") === 0);
+    (api.path as string).split("/").some( pathElement => pathElement.indexOf(":") === 0);
 
-export const hasBody = <REST_API extends UsesMethod & AtPath>(
-  api: REST_API
-): api is REST_API & Body<BODY_PARAMS<REST_API>> =>
-  "queryParams" in api;
+export const hasBody = (
+  api: any
+): api is Body =>
+  typeof(api) === "object" && "bodyParams" in api;
 
 // Functions to validate the type of an API
 export function isBodyParameterAPI(api: UsesMethod): api is UsesMethodSupportingBodyParameter {
@@ -81,9 +83,46 @@ export type PATH_PARAMS_OR_NULL<APITYPE> = APITYPE extends PathParameters ? APIT
 export type QUERY_PARAMS_OR_NULL<APITYPE> = APITYPE extends QueryParameters ? APITYPE['queryParams'] : null;
 export type PATH_PARAMS<APITYPE> = APITYPE extends PathParameters ? APITYPE['pathParams'] : undefined;
 export type QUERY_PARAMS<APITYPE> = APITYPE extends QueryParameters ? APITYPE['queryParams'] : undefined;
-export type PATH_AND_QUERY_PARAMS<APITYPE> = PATH_PARAMS<APITYPE> & QUERY_PARAMS<APITYPE>;
+export type PATH_AND_QUERY_PARAMS<APITYPE> =
+  APITYPE extends PathParameters & QueryParameters ? APITYPE['pathParams'] & APITYPE['queryParams'] :
+  APITYPE extends PathParameters ? APITYPE['pathParams'] :
+  APITYPE extends QueryParameters ? APITYPE['queryParams'] :
+  undefined;
+
 export type BODY_PARAMS<APITYPE> = APITYPE extends Body ? APITYPE['bodyParams'] : undefined;
 export type RESULT<APITYPE> = APITYPE extends Returns ? APITYPE['result'] : void;
+
+
+export type ClientFunction<RAPI extends AtPath & UsesMethod, REQUEST_OPTIONS> =
+  RAPI extends UsesMethodSupportingBodyParameter ? (
+    RAPI extends PathParameters & Body?  (
+      (pathParams: PATH_PARAMS<RAPI>, bodyParams: BODY_PARAMS<RAPI>, options?: REQUEST_OPTIONS) => Promise<RESULT<RAPI>>
+    ) :
+    RAPI extends Body?  (
+      (bodyParams: BODY_PARAMS<RAPI>, options?: REQUEST_OPTIONS) => Promise<RESULT<RAPI>>
+    ) :
+    RAPI extends PathParameters?  (
+      (pathParams: PATH_PARAMS<RAPI>,  options?: REQUEST_OPTIONS) => Promise<RESULT<RAPI>>
+    ): (
+      (options?: REQUEST_OPTIONS) => Promise<RESULT<RAPI>>
+    )
+  )
+  :
+  RAPI extends UsesMethodSupportingQueryParameter ? (
+    RAPI extends PathParameters & QueryParameters ? (
+      (pathAndQueryParameters: PATH_PARAMS<RAPI> & QUERY_PARAMS<RAPI>, options?: REQUEST_OPTIONS) => Promise<RESULT<RAPI>>
+    ) :
+    RAPI extends PathParameters ? (
+        (pathAndQueryParameters: PATH_PARAMS<RAPI>, options?: REQUEST_OPTIONS) => Promise<RESULT<RAPI>>
+    ) :
+    RAPI extends QueryParameters ? (
+        (pathAndQueryParameters: QUERY_PARAMS<RAPI>, options?: REQUEST_OPTIONS) => Promise<RESULT<RAPI>>
+    ) : (
+      (options?: REQUEST_OPTIONS) => Promise<RESULT<RAPI>>
+    )
+  )
+  : never;
+
 
 const mergeTypes = <T, U>(t: T, u: U): T & U => Object.assign({}, t, u);
 
@@ -153,23 +192,57 @@ export const CreateAPI = {
 /********************************************************************************
  * Version 1 constructors API.[GET|DELETE|PATCH|POST|PUT]
  */
-export type ApiConstructor<SO_FAR extends AtPath & UsesMethod> = ({
-  Returns<RESULT_TYPE>(): SO_FAR & Returns<RESULT_TYPE>;
+export type ApiConstructor<API_ALREADY_SPECIFIED extends AtPath & UsesMethod> = ({
+  /**
+   * Complete this API by specifying that it returns void.
+   * (No parens required.  Just follow this with a semicolon if you like.)
+   */
+  ReturnsVoid: API_ALREADY_SPECIFIED & Returns<void>;
+  /**
+   * Complete this API by specifying the return type as a generic parameter
+   * between angle brackets, completing the function with parentheses
+   * and a semicolon if you like to end statements with style. For example:
+   *   Returns<{
+   *     leadup: string;
+   *     punchline: string;
+   *   }>();
+   */
+  Returns<RESULT_TYPE>(): API_ALREADY_SPECIFIED & Returns<RESULT_TYPE>;
 }) & (
-  SO_FAR extends PathParameters ? {} : {
+  API_ALREADY_SPECIFIED extends PathParameters ? {} : {
+    /**
+     * Specify path parameters for this API in generic-parameter
+     * angle brackets followed by empty parentheses.  For example:
+     *   PathParameters<{ id: JokeId }>()
+     * They attribute name must appear in the path preceded by a colon.
+     *   "/joke/:id"
+     */
     PathParameters<PATH_PARAMETERS extends PathParametersType>():
-      ApiConstructor<SO_FAR & PathParameters<PATH_PARAMETERS>>
+      ApiConstructor<API_ALREADY_SPECIFIED & PathParameters<PATH_PARAMETERS>>
 }) & (
-  SO_FAR extends QueryParameters | UsesMethodSupportingBodyParameter ? {} : {
+  API_ALREADY_SPECIFIED extends QueryParameters | UsesMethodSupportingBodyParameter ? {} : {
+    /**
+     * Specify query parameters for this API in generic-parameter
+     * angle brackets followed by empty parentheses.  For example:
+     *   PathParameters<{ queryJokeTextFor: string }>()
+     */
     QueryParameters<QUERY_PARAMETERS extends QueryParametersType>():
-      ApiConstructor<SO_FAR & QueryParameters<QUERY_PARAMETERS>>
+      ApiConstructor<API_ALREADY_SPECIFIED & QueryParameters<QUERY_PARAMETERS>>
 }) & (
-  SO_FAR extends MethodSupportingBodyParameter | UsesMethodSupportingQueryParameter ? {} : {
+  API_ALREADY_SPECIFIED extends MethodSupportingBodyParameter | UsesMethodSupportingQueryParameter ? {} : {
+    /**
+     * Specify a body object type or body parameters or for this API
+     * in angle brackets followed by empty parentheses.  For example:
+     *   Body<{
+     *     leadup: string;
+     *     punchline: string;
+     * }>()
+     */
     Body<BODY_PARAMETERS>():
-      ApiConstructor<SO_FAR & Body<BODY_PARAMETERS>>
+      ApiConstructor<API_ALREADY_SPECIFIED & Body<BODY_PARAMETERS>>
 })
 
-const constructParameters = <SO_FAR extends
+const constructParameters = <API_ALREADY_SPECIFIED extends
   AtPath &
   UsesMethod & (
     {} |
@@ -177,37 +250,76 @@ const constructParameters = <SO_FAR extends
     QueryParameters |
     Body
   )>(
-    soFar: SO_FAR
-  ): ApiConstructor<SO_FAR> => {
+    apiAlreadySpecified: API_ALREADY_SPECIFIED
+  ): ApiConstructor<API_ALREADY_SPECIFIED> => {
     const constructor = ({
-      Returns: <RESULT_TYPE>() => mergeTypes(soFar, {result: {} as RESULT_TYPE} as Returns<RESULT_TYPE>),
-      ...(hasPathParameters(soFar) ? {} : {
+      ReturnsVoid: mergeTypes(apiAlreadySpecified, {result: undefined as void} as Returns<void>),
+      Returns: <RESULT_TYPE>() => mergeTypes(apiAlreadySpecified, {result: {} as RESULT_TYPE} as Returns<RESULT_TYPE>),
+      ...(hasPathParameters(apiAlreadySpecified) ? {} : {
         PathParameters: <PATH_PARAMETERS extends PathParametersType>() =>
-          constructParameters(mergeTypes(soFar, {pathParams: {} as PATH_PARAMETERS} as PathParameters<PATH_PARAMETERS>))
+          constructParameters(mergeTypes(apiAlreadySpecified, {pathParams: {} as PATH_PARAMETERS} as PathParameters<PATH_PARAMETERS>))
       }),
-      ...(hasQueryParameters(soFar) || isBodyParameterAPI(soFar) ? {} : {
+      ...(hasQueryParameters(apiAlreadySpecified) || isBodyParameterAPI(apiAlreadySpecified) ? {} : {
         QueryParameters: <QUERY_PARAMETERS extends QueryParametersType>() =>
-          constructParameters(mergeTypes(soFar, {queryParams: {} as QUERY_PARAMETERS} as QueryParameters<QUERY_PARAMETERS>))
+          constructParameters(mergeTypes(apiAlreadySpecified, {queryParams: {} as QUERY_PARAMETERS} as QueryParameters<QUERY_PARAMETERS>))
       }),
-      ...(hasBody(soFar) || isQueryParameterAPI(soFar) ? {} : {
+      ...(hasBody(apiAlreadySpecified) || isQueryParameterAPI(apiAlreadySpecified) ? {} : {
         Body: <BODY_PARAMETERS>() =>
-          constructParameters(mergeTypes(soFar, {bodyParams: {} as BODY_PARAMETERS} as Body<BODY_PARAMETERS>))
+          constructParameters(mergeTypes(apiAlreadySpecified, {bodyParams: {} as BODY_PARAMETERS} as Body<BODY_PARAMETERS>))
       })
-    }) as ApiConstructor<SO_FAR>;
+    }) as ApiConstructor<API_ALREADY_SPECIFIED>;
     return constructor;
 }
 
-const constructPath = <SO_FAR extends UsesMethod>(soFar: SO_FAR) => ({
+export interface ConstructPath<METHOD extends UsesMethod> {
+  /**
+   * Specify the path string at which this API accessed.  Parameter
+   * components within the path should start with a colon.  For example:
+   *   "/joke/:id"
+   */
+  Path<PATH extends string>(path: PATH): ApiConstructor< METHOD & AtPath<PATH> >;
+};
+
+/**
+ *
+ * @param method
+ */
+const constructPath = <METHOD extends UsesMethod>(method: METHOD): ConstructPath<METHOD> => ({
   Path: <PATH extends string>(path: PATH) => {
-    ensureMethodAndPathHaveNotBeenDefinedBefore(soFar.method, path);
-    return constructParameters(mergeTypes(soFar, {path} as AtPath<PATH>))
+    ensureMethodAndPathHaveNotBeenDefinedBefore(method.method, path);
+    return constructParameters(mergeTypes(method, {path} as AtPath<PATH>))
   }
 });
 
 export const API = {
+  /**
+   * Start specifying a GET API method.
+   * You will need to specify a path string, then specify the types of parameters,
+   * and finish by specifying the type of value returned by the method, if any.
+   */
   Get: constructPath({method: Method.get} as GET),
+  /**
+   * Start specifying a DELETE API method.
+   * You will need to specify a path string, then specify the types of parameters,
+   * and finish by specifying the type of value returned by the method, if any.
+   */
   Delete: constructPath({method: Method.delete} as DELETE),
+  /**
+   * Start specifying a PATCH API method.
+   * You will need to specify a path string, then specify the types of parameters,
+   * and finish by specifying the type of value returned by the method, if any.
+   */
   Patch: constructPath({method: Method.patch} as PATCH),
+  /**
+   * Start specifying a POST API method.
+   * You will need to specify a path string, then specify the types of parameters,
+   * and finish by specifying the type of value returned by the method, if any.
+   */
   Post: constructPath({method: Method.post} as POST),
+  /**
+   * Start specifying a PUT API method.
+   * You will need to specify a path string, then specify the types of parameters,
+   * and finish by specifying the type of value returned by the method, if any.
+   */
   Put: constructPath({method: Method.put} as PUT),
 }
