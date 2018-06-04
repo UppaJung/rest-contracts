@@ -7,7 +7,7 @@ import * as ExcuseContract from "./excuse-contract";
 // we might want to specify.
 const createRequestFunction = getClientCreationFunction("http://localhost:5000/", {timeout: 5000});
 
-// Call the factory to create a request functio nfor Get, Query, and Put
+// Call the factory to create a request function for Get, Query, and Put
 const excuseClient = {
   get: createRequestFunction(ExcuseContract.Get),
   query: createRequestFunction(ExcuseContract.Query),

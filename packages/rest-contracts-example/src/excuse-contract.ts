@@ -1,4 +1,4 @@
-import {API} from "rest-contracts";
+import {API} from "../../rest-contracts/src/rest-contracts";
 
 const sequentialIdCounters: {[key in string]: number} = {};
 const sequentialIdGenerator = <T extends string>(prefix: string) =>
@@ -12,12 +12,10 @@ export enum ExcuseQuality {
   Mediocre = "iffy",
   Poor = "lame"
 }
-
 export interface Excuse {
   quality: ExcuseQuality;
   description: string;
 }
-
 enum MayOnlyBeAnExcuseId {};
 export type ExcuseId = MayOnlyBeAnExcuseId & string;
 export const ExcuseId = sequentialIdGenerator<ExcuseId>("ExcuseId:");

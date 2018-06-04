@@ -53,37 +53,6 @@ function assemblePath(
   return {pathWithParameters, remainingParameters};
 }
 
-
-type RequestHandler<API extends RestContracts.AtPath & RestContracts.UsesMethod> =
-  API extends RestContracts.UsesMethodSupportingBodyParameter ? (
-    API extends RestContracts.PathParameters ? (
-      (pathParams: RestContracts.PATH_PARAMS<API>, bodyParams: RestContracts.BODY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
-    ) : (
-      (bodyParams: RestContracts.BODY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
-    )
-  )
-  :
-  API extends RestContracts.UsesMethodSupportingQueryParameter ? (
-    API extends RestContracts.PathParameters & RestContracts.QueryParameters ? (
-      (pathAndQueryParameters: RestContracts.PATH_PARAMS<API> & RestContracts.QUERY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
-    ) :
-    API extends RestContracts.PathParameters ? (
-        (pathAndQueryParameters: RestContracts.PATH_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
-    ) :
-    API extends RestContracts.QueryParameters ? (
-        (pathAndQueryParameters: RestContracts.QUERY_PARAMS<API>, options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
-    ) : (
-      (options?: RequestOptions) => Promise<RestContracts.RESULT<API>>
-    )
-  )
-  : never;
-
-// type RequestFactory = <
-// API extends RestContracts.AtPath & RestContracts.UsesMethod
-// >(
-//   api: API
-// ) => RequestHandler<API>;
-
 /**
  * Create a factory that will generated a promise-based client functions
  * to call the corresponding API function on the server.
@@ -101,7 +70,7 @@ export const getClientCreationFunction = (
     api: API,
     baseUrl: string = defaultBaseUrl,
     apiDefaultOptions: RequestOptions = {},
-  ): RequestHandler<API> => {
+  ): RestContracts.ClientFunction<API, RequestOptions>  => {
     const defaultOptions: RequestOptions = {...factoryDefaultOptions, ...apiDefaultOptions};
     // Remove any trailing slashes from the base URL since the path will start with a slash
     baseUrl = baseUrl.replace(/\/+$/, "")
@@ -132,59 +101,35 @@ export const getClientCreationFunction = (
 
     if (RestContracts.isQueryParameterAPI(api)) {
       const methodFunction = api.method === RestContracts.Method.get ? Axios.get : Axios.delete;
+      const hasQueryParameters = RestContracts.hasQueryParameters(api);
 
-      if (RestContracts.hasPathParameters(api)) {
-        // Return a function with path parameters and query parameters specified together as one parameter
-        return ( (
-          parameters: RestContracts.PATH_AND_QUERY_PARAMS<typeof api>,
-          options: RequestOptions = {}
-        ) => {
-          const {pathWithParameters, remainingParameters} = assemblePath(pathElements, parameterToIndex, parameters);
+      return ( (...args: any[]) => {
+        const parameters = (
+          (hasPathParameters || hasQueryParameters) ?
+          args.shift() : undefined
+        ) as RestContracts.PATH_AND_QUERY_PARAMS<API>;
+        const options = {...defaultOptions, ...(args.shift() || {} as RequestOptions)};
+        const {pathWithParameters, remainingParameters} = assemblePath(pathElements, parameterToIndex, parameters);
 
-          return wrapAxiosPromise<RestContracts.RESULT<typeof api>>(methodFunction(baseUrl + pathWithParameters, {...defaultOptions, ...options, params: remainingParameters }));
-        } ) as RequestHandler<API>;
-      } else if (RestContracts.hasQueryParameters) {
-        // Return a function with just query parameters
-        return ( (
-          queryParameters: RestContracts.PATH_AND_QUERY_PARAMS<API>,
-          options: RequestOptions = {}
-        ) => {
-          return wrapAxiosPromise(methodFunction(baseUrl + pathWithStartingSlash, {...defaultOptions, ...options, params: queryParameters }));
-        } ) as RequestHandler<API>;
-      } else {
-        // Return a function with no parameters
-        return ( (
-          options: RequestOptions = {}
-        ) => {
-          return wrapAxiosPromise(methodFunction(baseUrl + pathWithStartingSlash, {...defaultOptions, ...options }));
-        } ) as RequestHandler<API>;
-      }
+        return wrapAxiosPromise<RestContracts.RESULT<typeof api>>(methodFunction(baseUrl + pathWithParameters, {...defaultOptions, ...options, params: remainingParameters }))
+        }
+      ) as RestContracts.ClientFunction<API, RequestOptions> ;
     } else if (RestContracts.isBodyParameterAPI(api)) {
+      const hasBody = RestContracts.hasBody(api);
       const methodFunction = {
         post: Axios.post,
         put: Axios.put,
         patch: Axios.patch,
       }[api.method];
-      if (hasPathParameters) {
-        // Return a function with path parameters followed by body parameters
-        return ( (
-          pathParameters: RestContracts.PATH_PARAMS<API>,
-          bodyParameters: RestContracts.BODY_PARAMS<API>,
-          options: RequestOptions = {},
-        ) => {
-          const {pathWithParameters} = assemblePath(pathElements, parameterToIndex, pathParameters);
 
-          return wrapAxiosPromise(methodFunction(baseUrl + pathWithParameters, bodyParameters, {...defaultOptions, ...options }));
-        } ) as RequestHandler<API>;
-      } else {
-        // Return a function with body parameters but no path parameters
-        return ( (
-          bodyParameters: RestContracts.BODY_PARAMS<API>,
-          options: RequestOptions = {},
-        ) => {
-          return wrapAxiosPromise(methodFunction(baseUrl + pathWithStartingSlash, bodyParameters, {...defaultOptions, ...options }));
-        } ) as RequestHandler<API>;
-      }
+      return ( (...args: any[]) => {
+        const parameters = (hasPathParameters ? args.shift() : undefined) as RestContracts.PATH_PARAMS<API>;
+        const body = (hasBody ? args.shift() : undefined) as RestContracts.Body<API>;
+        const options = {...defaultOptions, ...(args.shift() || {} as RequestOptions)};
+        const {pathWithParameters} = assemblePath(pathElements, parameterToIndex, parameters);
+
+        return wrapAxiosPromise(methodFunction(baseUrl + pathWithParameters, body, {...defaultOptions, ...options }));
+      } ) as RestContracts.ClientFunction<API, RequestOptions> ;
     }
     throw new Error("Invalid method");
   }

@@ -23,11 +23,10 @@ export type TypedExpressHandlerDeleteGet<
     API extends RestContracts.UsesMethodSupportingQueryParameter
   > = (
       pathAndQueryParams:
-        PATH_PARAMS<API> extends undefined ?
-          QUERY_PARAMS<API> :
-        QUERY_PARAMS<API> extends undefined ?
-          PATH_PARAMS<API> :
-          PATH_PARAMS<API> & QUERY_PARAMS<API>,
+        API extends RestContracts.PathParameters & RestContracts.QueryParameters ? RestContracts.PATH_PARAMS<API> & RestContracts.QUERY_PARAMS<API> :
+        API extends RestContracts.PathParameters ? RestContracts.PATH_PARAMS<API> :
+        API extends RestContracts.QueryParameters ? RestContracts.QUERY_PARAMS<API> :
+        undefined,
       req: TypedExpressRequest<API>,
       res: express.Response,
       next: express.NextFunction,
@@ -92,23 +91,32 @@ export class RestContractsExpressServer {
    * @param handler A handler that takes the prescribed input and returns
    * the prescribed output (or a promise to deliver the prescribed output.)
    */
-  public implement<API extends RestContracts.UsesMethodSupportingQueryParameter>(
+  public implement<API extends RestContracts.UsesMethodSupportingQueryParameter & (
+    RestContracts.AtPath | RestContracts.PathParameters | RestContracts.QueryParameters
+  )>(
     api: API,
     handler: (
       pathAndQueryParams:
-        PATH_PARAMS<API> extends undefined ?
-          QUERY_PARAMS<API> :
-        QUERY_PARAMS<API> extends undefined ?
-          PATH_PARAMS<API> :
-          PATH_PARAMS<API> & QUERY_PARAMS<API>,
+        API extends RestContracts.PathParameters & RestContracts.QueryParameters ? RestContracts.PATH_PARAMS<API> & RestContracts.QUERY_PARAMS<API> :
+        API extends RestContracts.PathParameters ? RestContracts.PATH_PARAMS<API> :
+        API extends RestContracts.QueryParameters ? RestContracts.QUERY_PARAMS<API> :
+        undefined,
       req: TypedExpressRequest<API>,
       res: express.Response,
       next: express.NextFunction,
     ) => RestContracts.RESULT<API> | undefined | Promise<RestContracts.RESULT<API> | undefined>
   ): TypedExpressHandlerDeleteGet<API>;
-  public implement<API extends RestContracts.UsesMethodSupportingBodyParameter>(
+  public implement<API extends RestContracts.UsesMethodSupportingBodyParameter & (
+      RestContracts.AtPath | RestContracts.PathParameters | RestContracts.Body
+    )>(
     api: API,
-    handler: TypedExpressHandlerPatchPostPut<API>
+    handler: (
+      body: BODY_PARAMS<API>,
+      parameters: API extends RestContracts.PathParameters ? PATH_PARAMS<API> : undefined,
+      req: TypedExpressRequest<API>,
+      res: express.Response,
+      next: express.NextFunction,
+    ) => RestContracts.RESULT<API> | undefined | Promise<RestContracts.RESULT<API> | undefined>
   ): TypedExpressHandlerPatchPostPut<API>;
   public implement<API extends RestContracts.UsesMethod & RestContracts.AtPath>(
     api: API,

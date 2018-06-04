@@ -5069,13 +5069,16 @@ resolve@^1.1.6, resolve@^1.3.2:
   dependencies:
     path-parse "^1.0.5"
 
-rest-contracts@1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/rest-contracts/-/rest-contracts-1.0.1.tgz#c26b00846e1aa61bc7991a105a32496d27ef251e"
+rest-contracts-axios-client@false1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/rest-contracts-axios-client/-/rest-contracts-axios-client-1.0.5.tgz#e400ebf373ab04c643e69af697ad5c41298d41cf"
+  dependencies:
+    axios "^0.18.0"
+    rest-contracts "^1.0.8"
 
-rest-contracts@false1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/rest-contracts/-/rest-contracts-1.0.2.tgz#f1af7c9a1fd3cbf27da372f25b6941d17c298790"
+rest-contracts@false1.0.9:
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/rest-contracts/-/rest-contracts-1.0.9.tgz#323e1d2fd80e3bfa6f6afcb38ca5440c4430343b"
 
 restore-cursor@^1.0.1:
   version "1.0.1"
