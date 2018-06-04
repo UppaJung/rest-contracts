@@ -28,10 +28,6 @@ Finally, you specify a result type or return void.
 
 ![Intellisense gives you the option to specify a result or return no result (void)](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-returns.png?raw=true)
 
-Finally, you choose the specify the path.  Any path parameters should appear between slashes and be preceded by a colon (":").
-
-![Intellisense indicates where to specify the path.](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-path.png?raw=true)
-
 The result is a complete contract.
 
 ![A complete contract for a REST GET API.](https://raw.githubusercontent.com/UppaJung/rest-contracts/master/images/get-complete.png?raw=true)
