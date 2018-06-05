@@ -276,6 +276,7 @@ export interface ConstructPath<METHOD extends UsesMethod> {
    * Specify the path string at which this API accessed.  Parameter
    * components within the path should start with a colon.  For example:
    *   "/joke/:id"
+   * (The generic type parameter is inferred, so you need NOT specify it.)
    */
   Path<PATH extends string>(path: PATH): ApiConstructor< METHOD & AtPath<PATH> >;
 };
