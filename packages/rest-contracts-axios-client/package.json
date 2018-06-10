@@ -98,7 +98,9 @@
     }
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.18.0"
+  },
+  "peerDependencies": {
     "rest-contracts": "^1.0.8"
   },
   "devDependencies": {
@@ -112,6 +114,7 @@
     "husky": "0.14.1",
     "jest": "20.0.4",
     "lint-staged": "4.0.0",
+    "rest-contracts": "^1.0.8",
     "shx": "0.2.2",
     "standard-version": "4.2.0",
     "strip-json-comments-cli": "1.0.1",
