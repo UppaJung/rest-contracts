@@ -1,6 +1,6 @@
 {
   "name": "rest-contracts-example",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "An example using rest-contracts",
   "scripts": {
     "build": "tsc",
@@ -27,7 +27,7 @@
   "dependencies": {
     "rest-contracts": "false1.0.9",
     "rest-contracts-axios-client": "false1.0.5",
-    "rest-contracts-express-server": "^1.0.5"
+    "rest-contracts-express-server": "^1.1.0"
   },
   "devDependencies": {
     "lint-staged": "4.0.0",
