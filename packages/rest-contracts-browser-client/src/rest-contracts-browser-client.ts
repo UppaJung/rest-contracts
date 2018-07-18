@@ -149,6 +149,18 @@ export interface RequestOptions {
   headers?: {[name: string]: string};
   noCache?: boolean;
   withCredentials?: boolean;
+
+  // See https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon,
+  // works only for post requests and browsers that support sendBeacon.
+  transmitUsingSendBeacon?: boolean;
+}
+
+interface SendBeacon {
+  sendBeacon(url: string, data: string): void
+}
+
+function hasSendBeacon(navigator: Navigator): navigator is Navigator & SendBeacon {
+  return "sendBeacon" in navigator;
 }
 
 function request<T>(params: RequestOptions & {
@@ -164,9 +176,22 @@ function request<T>(params: RequestOptions & {
     noCache = false,
     timeoutInMs = 0,
     withCredentials = true,
+    transmitUsingSendBeacon = false,
   } = params;
 
-  return new Promise<T>((resolve, reject) => {
+  return new Promise<T>( (resolve, reject) => {
+
+    if (method === RestContracts.Method.post && transmitUsingSendBeacon && hasSendBeacon(navigator)) {
+      // The calling code wants to transmit information using navigator.sendBeacon,
+      // it is valid to do so (the method is POST, which is what sendBeacon uses),
+      // and this browser supports navigator.sendBeacon, so send the data via
+      // sendBeacon and return undefined since we don't get a response when we use
+      // sendBeacon.
+      navigator.sendBeacon(url, body ? JSON.stringify(body) : undefined);
+      resolve(undefined);
+
+      return;
+    }
 
     try {
       const xhr = new XMLHttpRequest();
