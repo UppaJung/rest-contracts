@@ -211,6 +211,9 @@ function wrap<
 
 
       if (typeof (result) !== "undefined") {
+        if (RestContracts.hasContentType(api)) {
+          res.set('Content-Type', api.contentType);
+        }
         if (RestContracts.isApiJsonEncoded(api)) {
           res.send(result);
         } else {
