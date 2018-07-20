@@ -99,7 +99,7 @@
     }
   },
   "peerDependencies": {
-    "rest-contracts": "^1.0.8"
+    "rest-contracts": "^1.1.1"
   },
   "devDependencies": {
     "@types/jest": "20.0.2",
