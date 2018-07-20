@@ -233,12 +233,13 @@ export type ApiConstructor<API_ALREADY_SPECIFIED extends AtPath & UsesMethod> = 
   Returns<RESULT_TYPE>(): API_ALREADY_SPECIFIED & ReturnsJSON<RESULT_TYPE>;
   /**
    * Complete this API by specifying the return type to be raw data,
-   * either sent as a string or a buffer. For example:
+   * either sent as a string or a buffer.  Optionally provide a content-type
+   * as a function parameter. For example:
    *   ReturnsRaw(); // raw data may be string or Buffer
    * or
-   *   ReturnRaw<Buffer>();
+   *   ReturnRaw<Buffer>("image/png");
    * or
-   *   ReturnRaw<string>();
+   *   ReturnRaw<string>("text/xml");
    */
   ReturnsRaw<RESULT_TYPE extends string | Buffer = string | Buffer>(contentType?: string): API_ALREADY_SPECIFIED & ReturnsRaw<RESULT_TYPE>;
 }) & (
