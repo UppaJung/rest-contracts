@@ -215,9 +215,9 @@ function wrap<
           res.set('Content-Type', api.contentType);
         }
         if (RestContracts.isApiJsonEncoded(api)) {
-          res.send(result);
-        } else {
           res.json(result);
+        } else {
+          res.send(result);
         }
       }
 
