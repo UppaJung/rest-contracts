@@ -190,10 +190,6 @@ function wrap<
         );
       }
 
-      if (typeof (result) !== "undefined") {
-        res.json(result);
-      }
-
       // If we reached here, there was no error.
       // Send method-specific success codes
       switch (method) {
@@ -205,6 +201,7 @@ function wrap<
           if (typeof (result) === "undefined") {
             // tslint:disable-next-line:no-magic-numbers
             res.status(404); // Not found
+            res.end();
           }
           break;
 
@@ -212,7 +209,18 @@ function wrap<
           break;
       }
 
-      res.end();
+
+      if (typeof (result) !== "undefined") {
+        if (RestContracts.hasContentType(api)) {
+          res.set('Content-Type', api.contentType);
+        }
+        if (RestContracts.isApiJsonEncoded(api)) {
+          res.json(result);
+        } else {
+          res.send(result);
+        }
+      }
+
     } catch (err) {
       return next(err);
     }

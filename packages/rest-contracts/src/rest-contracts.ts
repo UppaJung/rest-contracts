@@ -46,6 +46,29 @@ export interface Body<BODY_PARAMETER_TYPE = any> {
 export interface Returns<RESULT_TYPE = any> {
   result: RESULT_TYPE;
 }
+
+export enum ResultEncoding {
+  // Return result as JSON-encoded string (Default)
+  json = 'json',
+  // Return result as raw string or buffer
+  raw = 'raw'
+}
+
+export interface ReturnsJSON<T = any> extends Returns<T> {
+  resultEncoding: ResultEncoding.json;
+  contentType?: string;
+}
+export interface ReturnsRaw<T extends string | Buffer> extends Returns<T> {
+  resultEncoding: ResultEncoding.raw;
+  contentType?: string;
+}
+
+export const isApiJsonEncoded = (api: any): boolean =>
+  (!("resultEncoding" in api)) || api.resultEncoding === ResultEncoding.json;
+
+export const hasContentType = (api: any): api is {contentType: string} =>
+  ("contentType" in api) && typeof(api.contentType) === "string";
+
 export interface AtPath<PATH extends string = string> {
   path: PATH;
 }
@@ -207,7 +230,18 @@ export type ApiConstructor<API_ALREADY_SPECIFIED extends AtPath & UsesMethod> = 
    *     punchline: string;
    *   }>();
    */
-  Returns<RESULT_TYPE>(): API_ALREADY_SPECIFIED & Returns<RESULT_TYPE>;
+  Returns<RESULT_TYPE>(): API_ALREADY_SPECIFIED & ReturnsJSON<RESULT_TYPE>;
+  /**
+   * Complete this API by specifying the return type to be raw data,
+   * either sent as a string or a buffer.  Optionally provide a content-type
+   * as a function parameter. For example:
+   *   ReturnsRaw(); // raw data may be string or Buffer
+   * or
+   *   ReturnRaw<Buffer>("image/png");
+   * or
+   *   ReturnRaw<string>("text/xml");
+   */
+  ReturnsRaw<RESULT_TYPE extends string | Buffer = string | Buffer>(contentType?: string): API_ALREADY_SPECIFIED & ReturnsRaw<RESULT_TYPE>;
 }) & (
   API_ALREADY_SPECIFIED extends PathParameters ? {} : {
     /**
@@ -254,7 +288,14 @@ const constructParameters = <API_ALREADY_SPECIFIED extends
   ): ApiConstructor<API_ALREADY_SPECIFIED> => {
     const constructor = ({
       ReturnsVoid: mergeTypes(apiAlreadySpecified, {result: undefined as void} as Returns<void>),
-      Returns: <RESULT_TYPE>() => mergeTypes(apiAlreadySpecified, {result: {} as RESULT_TYPE} as Returns<RESULT_TYPE>),
+      ReturnsRaw: <RESULT_TYPE extends string | Buffer>(contentType?: string) => mergeTypes(
+        apiAlreadySpecified,
+        {result: {} as RESULT_TYPE, contentType, resultEncoding: ResultEncoding.raw} as ReturnsRaw<RESULT_TYPE>),
+      ...(hasPathParameters(apiAlreadySpecified) ? {} : {
+        PathParameters: <PATH_PARAMETERS extends PathParametersType>() =>
+          constructParameters(mergeTypes(apiAlreadySpecified, {pathParams: {} as PATH_PARAMETERS} as PathParameters<PATH_PARAMETERS>))
+      }),
+      Returns: <RESULT_TYPE>() => mergeTypes(apiAlreadySpecified, {result: {} as RESULT_TYPE, resultEncoding: ResultEncoding.json} as ReturnsJSON<RESULT_TYPE>),
       ...(hasPathParameters(apiAlreadySpecified) ? {} : {
         PathParameters: <PATH_PARAMETERS extends PathParametersType>() =>
           constructParameters(mergeTypes(apiAlreadySpecified, {pathParams: {} as PATH_PARAMETERS} as PathParameters<PATH_PARAMETERS>))
