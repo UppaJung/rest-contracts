@@ -8,6 +8,7 @@
   "scripts": {
     "prepare": "npm run build",
     "build": "lerna run build",
+    "publish-bc": "lerna publish --package rest-contracts-browser-client",
     "example": "lerna run start --scope \"rest-contracts-example\""
   },
   "repository": {

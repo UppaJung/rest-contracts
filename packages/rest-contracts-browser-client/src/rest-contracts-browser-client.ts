@@ -187,7 +187,9 @@ function request<T>(params: RequestOptions & {
       // and this browser supports navigator.sendBeacon, so send the data via
       // sendBeacon and return undefined since we don't get a response when we use
       // sendBeacon.
-      navigator.sendBeacon(url, body ? JSON.stringify(body) : undefined);
+      navigator.sendBeacon(url, body ? 
+        new Blob([JSON.stringify(body)], {type : 'application/json'}) :
+        undefined);
       resolve(undefined);
 
       return;
